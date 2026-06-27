@@ -1,0 +1,331 @@
+/* Layout helper to make auth pages cover full viewport */
+.auth-content {
+  margin: 0 !important;
+  padding: 0 !important;
+  min-height: 100vh;
+  width: 100%;
+}
+
+.login-section {
+  width: 100%;
+  min-height: 100vh;
+  background-color: #ffffff;
+  display: flex;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  overflow: hidden;
+}
+
+.login-container {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Split Panes */
+.login-pane {
+  flex: 1;
+  position: relative;
+}
+
+/* Form Pane */
+.login-pane--form {
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* Pushes the footer to the bottom */
+  align-items: center;
+  padding: 40px 20px;
+  overflow-y: auto;
+}
+
+.login-form-wrapper {
+  width: 100%;
+  max-width: 390px;
+  margin: auto 0; /* Centers the form block vertically within the flex container */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.login-header {
+  margin-bottom: 30px;
+}
+
+.login-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.login-subtitle {
+  font-size: 14px;
+  color: #4B5563;
+  line-height: 1.6;
+  font-weight: 400;
+}
+
+/* Form Styles */
+.login-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.form-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 6px;
+  text-align: left;
+}
+
+.form-input {
+  width: 100%;
+  padding: 14px 16px;
+  background-color: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  font-size: 15px;
+  color: #0F172A;
+  transition: all 0.2s ease-in-out;
+  outline: none;
+}
+
+.form-input::placeholder {
+  color: #94A3B8;
+  opacity: 1; /* Browser default override */
+}
+
+.form-input:focus {
+  background-color: #ffffff;
+  border-color: #004ae4;
+  box-shadow: 0 0 0 4px rgba(0, 74, 228, 0.1);
+}
+
+.form-group--error .form-input {
+  border-color: #EF4444;
+  background-color: #FEF2F2;
+}
+
+.form-error {
+  font-size: 12px;
+  color: #EF4444;
+  margin-top: 5px;
+  text-align: left;
+}
+
+/* Forgot Password Link */
+.forgot-password-link-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.forgot-password-link {
+  font-size: 13px;
+  font-weight: 500;
+  color: #004ae4;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.forgot-password-link:hover {
+  color: #0037a5;
+  text-decoration: underline;
+}
+
+/* Submit Button */
+.submit-btn {
+  width: 100%;
+  padding: 14px 24px;
+  background-color: #004ae4;
+  border: none;
+  border-radius: 10px;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+  margin-top: 10px;
+}
+
+.submit-btn:hover {
+  background-color: #003bb6;
+}
+
+.submit-btn:active {
+  transform: scale(0.99);
+}
+
+.submit-btn:disabled {
+  background-color: #93C5FD;
+  cursor: not-allowed;
+}
+
+/* Divider */
+.login-divider {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin: 24px 0;
+}
+
+.login-divider-line {
+  flex: 1;
+  height: 1px;
+  background-color: #E2E8F0;
+}
+
+.login-divider-text {
+  padding: 0 16px;
+  color: #94A3B8;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+/* Google Button */
+.google-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 14px 24px;
+  background-color: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  color: #334155;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.google-btn:hover {
+  background-color: #F1F5F9;
+  border-color: #CBD5E1;
+  color: #1E293B;
+}
+
+.google-btn:active {
+  transform: scale(0.99);
+}
+
+.google-icon {
+  flex-shrink: 0;
+}
+
+/* Signup prompt */
+.signup-prompt {
+  text-align: center;
+  font-size: 14px;
+  color: #475569;
+  margin-top: 32px;
+}
+
+.signup-link {
+  color: #004ae4;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.signup-link:hover {
+  color: #0037a5;
+  text-decoration: underline;
+}
+
+/* Footer Copyright */
+.login-footer {
+  width: 100%;
+  text-align: center;
+  font-size: 12px;
+  color: #94A3B8;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  margin-top: 40px;
+}
+
+/* Image Pane */
+.login-pane--image {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 60px;
+}
+
+/* Logo Overlay on Right Side */
+.logo-overlay {
+  background-color: transparent;
+}
+
+.login-logo-link {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 32px;
+  font-weight: 900;
+  text-decoration: none;
+  letter-spacing: -0.5px;
+}
+
+.logo-text-job {
+  color: #F5BF22; /* Warm Gold */
+}
+
+.logo-text-zone {
+  color: #000000; /* Black */
+}
+
+/* ==========================================
+   RESPONSIVE STYLES
+   ========================================== */
+
+@media (max-width: 992px) {
+  .login-pane--image {
+    display: none;
+  }
+  
+  .login-pane--form {
+    width: 100%;
+    min-height: 100vh;
+    padding: 60px 24px;
+  }
+
+  .login-form-wrapper {
+    margin: auto 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-title {
+    font-size: 28px;
+  }
+
+  .login-form-wrapper {
+    max-width: 100%;
+  }
+
+  .form-input {
+    padding: 12px 14px;
+  }
+
+  .submit-btn,
+  .google-btn {
+    padding: 12px 20px;
+  }
+}

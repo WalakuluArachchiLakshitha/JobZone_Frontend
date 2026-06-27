@@ -1,0 +1,79 @@
+.main-content {
+  min-height: 100vh;
+  padding-top: 96px;
+  transition: padding-top 0.25s ease;
+}
+
+/* When navbar is logged in, layout height is 65px */
+.navbar--logged-in ~ .main-content {
+  padding-top: 65px;
+}
+
+/* On mobile/tablet viewports, the navbar is always single row (approx 65px) */
+@media (max-width: 992px) {
+  .main-content {
+    padding-top: 65px;
+  }
+}
+
+/* Global Floating Buttons Styles */
+.floating-whatsapp {
+  position: fixed;
+  left: 24px;
+  bottom: 24px;
+  width: 50px;
+  height: 50px;
+  background-color: #25D366; /* WhatsApp Green */
+  color: #ffffff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  z-index: 999;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.floating-whatsapp:hover {
+  transform: scale(1.1);
+  background-color: #128C7E;
+}
+
+.floating-chat {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  width: 50px;
+  height: 50px;
+  background-color: #5D3EBC; /* Purple Chat */
+  color: #ffffff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  z-index: 999;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.floating-chat:hover {
+  transform: scale(1.1);
+  background-color: #4C2FA3;
+}
+
+@media (max-width: 768px) {
+  .floating-whatsapp,
+  .floating-chat {
+    width: 42px;
+    height: 42px;
+    bottom: 16px;
+  }
+  .floating-whatsapp {
+    left: 16px;
+  }
+  .floating-chat {
+    right: 16px;
+  }
+}
