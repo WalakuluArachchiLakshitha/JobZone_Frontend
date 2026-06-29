@@ -105,6 +105,24 @@ export function AuthProvider({ children }) {
     syncLocalStorage(null, null);
   };
 
+  const googleLogin = async (credential) => {
+    setIsLoading(true);
+    try {
+      const response = await authApi.googleLogin(credential);
+      if (response.success) {
+        setToken(response.token);
+        setUser(response.user);
+        syncLocalStorage(response.token, response.user);
+        return { success: true, user: response.user };
+      }
+      return { success: false, message: response.message || 'Google login failed' };
+    } catch (error) {
+      return { success: false, message: error.message || 'An error occurred during Google login' };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const refreshUser = async () => {
     try {
       const response = await userApi.getProfile();
@@ -127,6 +145,7 @@ export function AuthProvider({ children }) {
     login,
     register,
     logout,
+    googleLogin,
     refreshUser,
     role: user?.role === 'seeker' ? 'candidate' : user?.role || 'candidate'
   };

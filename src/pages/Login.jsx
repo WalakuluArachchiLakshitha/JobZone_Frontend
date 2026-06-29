@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FcGoogle } from 'react-icons/fc';
 import { useAuth } from '../context/AuthContext';
@@ -7,7 +7,7 @@ import './Login.css';
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, googleLogin } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState('');
   const [formData, setFormData] = useState({
@@ -70,14 +70,76 @@ export default function Login() {
     }
   };
 
+  // ── Google Sign-In ──────────────────────────────────────────────────
+  const googleBtnRef = useRef(null);
+  const gsiInitialized = useRef(false);
+
+  const handleGoogleResponse = useCallback(async (response) => {
+    if (response.credential) {
+      setIsLoading(true);
+      setApiError('');
+      const result = await googleLogin(response.credential);
+      setIsLoading(false);
+
+      if (result.success) {
+        navigate('/dashboard');
+      } else {
+        setApiError(result.message);
+      }
+    }
+  }, [googleLogin, navigate]);
+
+  useEffect(() => {
+    const initGoogleSignIn = () => {
+      if (gsiInitialized.current) return;
+      if (!window.google?.accounts?.id) return;
+      if (!googleBtnRef.current) return;
+
+      gsiInitialized.current = true;
+
+      window.google.accounts.id.initialize({
+        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || '',
+        callback: handleGoogleResponse,
+      });
+
+      // Render Google's own button inside a hidden container
+      window.google.accounts.id.renderButton(googleBtnRef.current, {
+        type: 'standard',
+        theme: 'outline',
+        size: 'large',
+        width: 400,
+      });
+    };
+
+    if (window.google?.accounts?.id) {
+      initGoogleSignIn();
+    } else {
+      window.handleGoogleScriptLoad = initGoogleSignIn;
+    }
+
+    return () => {
+      gsiInitialized.current = false;
+    };
+  }, [handleGoogleResponse]);
+
+  const handleGoogleClick = () => {
+    // Click the hidden Google-rendered button to trigger the popup
+    const hiddenBtn = googleBtnRef.current?.querySelector('[role="button"]');
+    if (hiddenBtn) {
+      hiddenBtn.click();
+    } else {
+      setApiError('Google Sign-In is not available. Please try again later.');
+    }
+  };
+
   return (
     <section className="login-section">
       <div className="login-container">
-        
+
         {/* Left Side: Form */}
         <div className="login-pane login-pane--form">
           <div className="login-form-wrapper">
-            
+
             {/* Header */}
             <div className="login-header">
               <h1 className="login-title">Welcome Back 👋</h1>
@@ -93,7 +155,7 @@ export default function Login() {
                   {apiError}
                 </div>
               )}
-              
+
               {/* Email */}
               <div className={`form-group ${errors.email && touched.email ? 'form-group--error' : ''}`}>
                 <label htmlFor="login-email" className="form-label">Email</label>
@@ -130,10 +192,10 @@ export default function Login() {
                 {errors.password && touched.password && (
                   <span className="form-error">{errors.password}</span>
                 )}
-                
+
                 {/* Forgot Password */}
                 <div className="forgot-password-link-container">
-                  <Link to="#" className="forgot-password-link">
+                  <Link to="/forgot-password" className="forgot-password-link">
                     Forgot Password?
                   </Link>
                 </div>
@@ -145,7 +207,7 @@ export default function Login() {
                 className="submit-btn"
                 disabled={isLoading}
               >
-                {isLoading ? 'Signing in...' : 'Sign in'}
+                {isLoading ? 'Logging in...' : 'Log in'}
               </button>
             </form>
 
@@ -157,14 +219,16 @@ export default function Login() {
             </div>
 
             {/* Google Login */}
-            <button className="google-btn" type="button">
+            {/* Hidden Google-rendered button (for OAuth popup) */}
+            <div ref={googleBtnRef} style={{ position: 'absolute', opacity: 0, pointerEvents: 'none', height: 0, overflow: 'hidden' }} />
+            <button className="google-btn" type="button" onClick={handleGoogleClick}>
               <FcGoogle size={20} className="google-icon" />
-              <span className="google-btn-text">Sign in with Google</span>
+              <span className="google-btn-text">Log in with Google</span>
             </button>
 
             {/* Footer Sign Up Link */}
             <p className="signup-prompt">
-              Don't you have an account? <Link to="/register" className="signup-link">Sign up</Link>
+              Don't you have an account? <Link to="/register" className="signup-link">Register</Link>
             </p>
           </div>
 

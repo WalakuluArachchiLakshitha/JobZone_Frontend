@@ -14,15 +14,17 @@ import Candidates from './pages/Candidates';
 import CandidateDetail from './pages/CandidateDetail';
 import PostVacancy from './pages/PostVacancy';
 import Contact from './pages/Contact';
+import ForgotPassword from './pages/ForgotPassword';
 import ScrollToTop from './components/ScrollToTop';
 import ProtectedRoute from './components/ProtectedRoute';
 import Chatbot from './components/Chatbot';
+import WhatsAppButton from './components/WhatsAppButton';
 import { AuthProvider } from './context/AuthContext';
 import './App.css';
 
 function AppContent() {
   const location = useLocation();
-  const isAuthRoute = location.pathname === '/login' || location.pathname === '/register';
+  const isAuthRoute = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/forgot-password';
 
   return (
     <>
@@ -34,6 +36,7 @@ function AppContent() {
           <Route path="/jobs/:id" element={<JobDetail />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/dashboard" element={
             <ProtectedRoute>
               <Dashboard />
@@ -56,6 +59,9 @@ function AppContent() {
       
       {/* Global Chatbot */}
       {!isAuthRoute && <Chatbot />}
+      
+      {/* WhatsApp Float Button */}
+      {!isAuthRoute && <WhatsAppButton />}
     </>
   );
 }

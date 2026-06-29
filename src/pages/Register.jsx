@@ -233,11 +233,11 @@ export default function Register() {
     return (
       <section className="login-section">
         <div className="login-container">
-          
+
           {/* Left Side: Form */}
           <div className="login-pane login-pane--form">
             <div className="login-form-wrapper">
-              
+
               <div className="login-header">
                 <h1 className="login-title">Register your information</h1>
                 <p className="login-subtitle">Fill the form below to get instant access:</p>
@@ -293,13 +293,13 @@ export default function Register() {
     return (
       <section className="login-section">
         <div className="login-container">
-          
+
           {/* Left Side: Form */}
           <div className="login-pane login-pane--form">
             <div className="login-form-wrapper">
-              
+
               <div className="login-header">
-                <h1 className="login-title">Sign up now</h1>
+                <h1 className="login-title">Log in  now </h1>
                 <p className="login-subtitle">Fill the form below to get instant access:</p>
               </div>
 
@@ -362,7 +362,7 @@ export default function Register() {
                 </div>
 
                 <button type="submit" className="submit-btn">
-                  Sign up
+                  Register
                 </button>
               </form>
 
@@ -377,11 +377,11 @@ export default function Register() {
                 setStep(3);
               }}>
                 <FcGoogle size={20} className="google-icon" />
-                <span className="google-btn-text">Sign up with Google</span>
+                <span className="google-btn-text">Register with Google</span>
               </button>
 
               <p className="signup-prompt">
-                Do you have an account? <Link to="/login" className="signup-link">Sign in</Link>
+                Do you have an account? <Link to="/login" className="signup-link">Log in </Link>
               </p>
             </div>
 
@@ -409,7 +409,7 @@ export default function Register() {
   return (
     <section className="profile-register-section">
       <div className="profile-register-container">
-        
+
         {/* Title Block */}
         <div className="profile-register-header">
           <h1 className="profile-register-title">Register your information</h1>
@@ -424,10 +424,10 @@ export default function Register() {
             </div>
           )}
           <div className="profile-form-grid">
-            
+
             {/* Left Column */}
             <div className="profile-form-column">
-              
+
               {/* First Name */}
               <div className={`form-group ${errors.firstName && touched.firstName ? 'form-group--error' : ''}`}>
                 <label className="form-label">First Name *</label>
@@ -534,7 +534,7 @@ export default function Register() {
 
             {/* Right Column */}
             <div className="profile-form-column">
-              
+
               {/* Last Name */}
               <div className={`form-group ${errors.lastName && touched.lastName ? 'form-group--error' : ''}`}>
                 <label className="form-label">Last Name *</label>
@@ -590,32 +590,32 @@ export default function Register() {
                   </div>
 
                   <div className="form-group">
-                  <label className="form-label">Upload Resume</label>
-                  <div className="resume-dropzone">
-                    <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="#004ae4" strokeWidth="1.5" className="cloud-icon">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
-                    </svg>
-                    <span className="dropzone-title">Drop a resume file or click to upload.</span>
-                    <span className="dropzone-subtitle">To upload file size is <strong>(Max 5Mb)</strong> and allowed file types are <strong>(.jpeg, .doc, .docx, .pdf)</strong></span>
-                    
-                    <div className="dropzone-divider">
-                      <span className="dropzone-line"></span>
-                      <span className="dropzone-text">or</span>
-                      <span className="dropzone-line"></span>
-                    </div>
+                    <label className="form-label">Upload Resume</label>
+                    <div className="resume-dropzone">
+                      <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="#004ae4" strokeWidth="1.5" className="cloud-icon">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
+                      </svg>
+                      <span className="dropzone-title">Drop a resume file or click to upload.</span>
+                      <span className="dropzone-subtitle">To upload file size is <strong>(Max 5Mb)</strong> and allowed file types are <strong>(.jpeg, .doc, .docx, .pdf)</strong></span>
 
-                    <label className="dropzone-upload-btn">
-                      <Upload size={16} />
-                      Upload Resume
-                      <input type="file" onChange={handleFileUpload} accept=".jpeg,.jpg,.png,.doc,.docx,.pdf" style={{ display: 'none' }} />
-                    </label>
-                    
-                    {uploadedFileName && (
-                      <div className="uploaded-file-tag">
-                        <Check size={14} /> {uploadedFileName}
+                      <div className="dropzone-divider">
+                        <span className="dropzone-line"></span>
+                        <span className="dropzone-text">or</span>
+                        <span className="dropzone-line"></span>
                       </div>
-                    )}
-                  </div>
+
+                      <label className="dropzone-upload-btn">
+                        <Upload size={16} />
+                        Upload Resume
+                        <input type="file" onChange={handleFileUpload} accept=".jpeg,.jpg,.png,.doc,.docx,.pdf" style={{ display: 'none' }} />
+                      </label>
+
+                      {uploadedFileName && (
+                        <div className="uploaded-file-tag">
+                          <Check size={14} /> {uploadedFileName}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </>
               )}
