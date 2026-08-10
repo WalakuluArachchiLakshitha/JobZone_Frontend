@@ -73,7 +73,6 @@ export function AuthProvider({ children }) {
       }
       return { success: false, message: response.message || 'Login failed' };
     } catch (error) {
-      setIsLoading(false);
       return { success: false, message: error.message || 'An error occurred during login' };
     } finally {
       setIsLoading(false);
@@ -92,7 +91,6 @@ export function AuthProvider({ children }) {
       }
       return { success: false, message: response.message || 'Registration failed' };
     } catch (error) {
-      setIsLoading(false);
       return { success: false, message: error.message || 'An error occurred during registration' };
     } finally {
       setIsLoading(false);

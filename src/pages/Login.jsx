@@ -25,7 +25,7 @@ export default function Login() {
         return '';
       case 'password':
         if (!value) return 'Password is required';
-        if (value.length < 8) return 'Password must be at least 8 characters';
+        if (value.length < 6) return 'Password must be at least 6 characters';
         return '';
       default:
         return '';
@@ -144,7 +144,7 @@ export default function Login() {
             <div className="login-header">
               <h1 className="login-title">Welcome Back 👋</h1>
               <p className="login-subtitle">
-                Today is a new opportunity. It's your career journey. You shape it.Sign in to discover jobs.
+                Today is a new opportunity. It's your career journey. You shape it. Sign in to discover jobs.
               </p>
             </div>
 

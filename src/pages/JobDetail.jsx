@@ -24,7 +24,7 @@ import './JobDetail.css';
 
 export default function JobDetail() {
   const { id } = useParams();
-  const { role } = useAuth();
+  const { role, isAuthenticated } = useAuth();
   const [job, setJob] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
@@ -336,19 +336,33 @@ export default function JobDetail() {
           {/* Right Column: Sidebar */}
           <div className="job-details-right-column">
             
-            {/* CTA buttons card */}
-            <div className="sidebar-apply-card">
-              <button
-                onClick={handleApply}
-                disabled={hasApplied}
-                className="sidebar-apply-btn"
-              >
-                {hasApplied ? 'ALREADY APPLIED' : 'APPLY FOR THE JOB'}
-              </button>
-              <div className="ends-in-label">
-                Application ends in 26d 15h 39min
+            {/* CTA buttons card — only shown to job seekers (candidates) */}
+            {role === 'candidate' ? (
+              <div className="sidebar-apply-card">
+                <button
+                  onClick={handleApply}
+                  disabled={hasApplied}
+                  className="sidebar-apply-btn"
+                >
+                  {hasApplied ? 'ALREADY APPLIED' : 'APPLY FOR THE JOB'}
+                </button>
+                <div className="ends-in-label">
+                  Application ends in 26d 15h 39min
+                </div>
               </div>
-            </div>
+            ) : role === 'employer' ? (
+              <div className="sidebar-apply-card" style={{ textAlign: 'center', padding: '1.25rem' }}>
+                <p style={{ color: '#64748b', fontSize: '0.9rem', margin: 0 }}>
+                  👔 You are signed in as an <strong>employer</strong>. Only job seekers can apply for vacancies.
+                </p>
+              </div>
+            ) : (
+              <div className="sidebar-apply-card" style={{ textAlign: 'center', padding: '1.25rem' }}>
+                <Link to="/login" className="sidebar-apply-btn" style={{ display: 'inline-block', textDecoration: 'none', textAlign: 'center' }}>
+                  LOG IN TO APPLY
+                </Link>
+              </div>
+            )}
 
             <button
               onClick={() => triggerToast(`Contact form opened for ${companyName}`)}
