@@ -15,3 +15,7 @@ export const companiesApi = {
   createCompany: (data) => apiClient.post('/companies', data),
   updateCompany: (id, data) => apiClient.put(`/companies/${id}`, data),
 };
+
+
+
+

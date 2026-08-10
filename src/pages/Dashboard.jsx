@@ -57,6 +57,14 @@ export default function Dashboard() {
 
   const fileInputRef = useRef(null);
 
+  const getAvatarUrl = (avatarPath) => {
+    if (!avatarPath) return "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&h=150&q=80";
+    if (avatarPath.startsWith('http')) return avatarPath;
+    return `http://localhost:5000${avatarPath}`;
+  };
+
+  const userAvatar = getAvatarUrl(profile.avatar);
+
   // Admin states
   const [adminStats, setAdminStats] = useState(null);
   const [adminUsers, setAdminUsers] = useState([]);
@@ -526,7 +534,6 @@ export default function Dashboard() {
     const userPhone = profile.phone || '123-456-7890';
     const userLocation = profile.location || '123 Anywhere St., Any City';
     const userBio = profile.bio || '';
-    const userAvatar = profile.avatar || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&h=150&q=80";
     const userWebsite = profile.website || 'www.reallygreatsite.com';
 
     if (selectedTemplate === 1) {
@@ -1109,7 +1116,7 @@ export default function Dashboard() {
                           strokeLinecap="round" transform="rotate(-90 60 60)" />
                 </svg>
                 <div className="profile-progress-avatar-wrap">
-                  <img src={profile.avatar || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&h=150&q=80"} alt="Avatar" className="profile-progress-avatar" />
+                  <img src={userAvatar} alt="Avatar" className="profile-progress-avatar" />
                 </div>
               </div>
               <div className="profile-progress-percent">{completenessScore}%</div>
