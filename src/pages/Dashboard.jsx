@@ -680,38 +680,49 @@ export default function Dashboard() {
         </div>
       `;
     } else if (selectedTemplate === 2) {
-      // Daniel Gallego styling
-      templateStyles = `
-        body { font-family: 'Inter', sans-serif; color: #333; margin: 0; padding: 0; line-height: 1.5; background: #fff; }
-        .resume-container { display: grid; grid-template-columns: 270px 1fr; max-width: 800px; margin: 0 auto; min-height: 100vh; }
-        .left-col { background: #1e2022; color: #ffffff; padding: 40px 24px; }
-        .right-col { background: #ffffff; padding: 45px 35px; }
-        
-        .avatar-container { text-align: center; margin-bottom: 25px; }
-        .avatar { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid rgba(255,255,255,0.1); }
-        
-        .left-col h1 { font-size: 26px; font-weight: 900; margin: 20px 0 5px; text-transform: uppercase; letter-spacing: 1.5px; line-height: 1.1; color: #ffffff; text-align: center; }
-        .left-col .title-tag { font-size: 13px; color: #cbd5e1; font-weight: 500; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 30px; text-align: center; display: block; }
-        
-        .left-col h2 { font-size: 12px; font-weight: 700; color: #ffffff; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 6px; margin: 25px 0 12px; text-transform: uppercase; letter-spacing: 1px; }
-        .right-col h2 { font-size: 15px; font-weight: 800; color: #111827; border-bottom: 2px solid #111827; padding-bottom: 6px; margin: 30px 0 15px; text-transform: uppercase; letter-spacing: 0.5px; }
-        
-        .contact-item { font-size: 11px; color: #cbd5e1; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
-        .bullet-list { margin: 0; padding-left: 15px; font-size: 11px; color: #cbd5e1; }
-        .bullet-list li { margin-bottom: 6px; }
-        
-        p { font-size: 12px; color: #4B5563; line-height: 1.6; }
-        
-        .entry-item { margin-bottom: 20px; }
-        .entry-header { display: flex; justify-content: space-between; align-items: baseline; }
-        .entry-title { font-size: 13.5px; font-weight: 700; color: #111827; margin: 0; }
-        .entry-year { font-size: 11.5px; font-weight: 600; color: #4B5563; }
-        .entry-sub { font-size: 11.5px; font-weight: 600; color: #4B5563; display: block; margin: 2px 0 6px; }
-        .entry-desc { font-size: 11px; color: #4B5563; margin: 0; line-height: 1.6; }
-        
-        .ref-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .ref-item strong { font-size: 12.5px; color: #111827; display: block; }
-        .ref-item span { font-size: 11px; color: #4B5563; display: block; }
+      // Daniel Gallego styling (clean printed CV layout)
+      templateStyles = printBaseStyles + `
+        body { font-family: 'Inter', sans-serif; color: #111827; margin: 0; padding: 0; background: #f4f5f8; }
+        html, body { min-height: 100%; }
+        .resume-container { display: grid; grid-template-columns: 280px 1fr; width: 100%; max-width: 900px; min-height: calc(100vh - 28mm); margin: 0 auto; background: #ffffff; }
+        .left-col { background: #17191f; color: #ffffff; padding: 40px 28px; display: flex; flex-direction: column; }
+        .right-col { background: #ffffff; padding: 42px 40px; }
+
+        .avatar-container { display: flex; justify-content: center; margin-bottom: 24px; }
+        .avatar { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid rgba(255,255,255,0.18); box-shadow: 0 12px 28px rgba(0,0,0,0.18); }
+
+        .left-col h1 { font-size: 32px; font-weight: 900; margin: 0 0 6px; text-transform: uppercase; letter-spacing: 0.08em; line-height: 1.02; text-align: center; }
+        .left-col .title-tag { display: block; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.75); text-align: center; margin-bottom: 34px; }
+
+        .section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin: 24px 0 8px; }
+        .section-divider { width: 100%; height: 1px; background: rgba(255,255,255,0.16); margin-bottom: 18px; }
+
+        .contact-item { margin-bottom: 14px; }
+        .contact-item strong { display: block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.18em; color: rgba(255,255,255,0.78); margin-bottom: 4px; }
+        .contact-item span { display: block; font-size: 12px; color: rgba(255,255,255,0.9); line-height: 1.6; }
+
+        .left-list { margin: 0; padding-left: 18px; list-style: disc; color: rgba(255,255,255,0.9); }
+        .left-list li { margin-bottom: 10px; font-size: 12px; line-height: 1.75; }
+
+        .right-col h2 { font-size: 14px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #111827; margin: 0 0 14px; }
+        .right-col h2 + .section-divider { margin-top: 12px; margin-bottom: 18px; }
+
+        .entry-item { margin-bottom: 22px; }
+        .entry-header { display: flex; justify-content: space-between; gap: 20px; align-items: flex-start; }
+        .entry-title { font-size: 13.5px; font-weight: 800; color: #111827; margin: 0; }
+        .entry-year { font-size: 11px; font-weight: 700; color: #111827; opacity: 0.75; margin-top: 4px; text-transform: uppercase; }
+        .entry-sub { display: block; margin-top: 8px; font-size: 11.5px; font-weight: 600; color: #4B5563; }
+        .entry-desc { margin: 10px 0 0; font-size: 11.4px; color: #4B5563; line-height: 1.72; }
+
+        .ref-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 16px; }
+        .ref-item strong { font-size: 12px; color: #111827; display: block; margin-bottom: 6px; }
+        .ref-item span { font-size: 11px; color: #4B5563; line-height: 1.6; display: block; }
+
+        @media print {
+          body { background: #ffffff; }
+          .resume-container { box-shadow: none; }
+          .left-col, .right-col { break-inside: avoid; }
+        }
       `;
       
       const skillsHTML_Gallego = skills.map(s => `<li>${s}</li>`).join('');
@@ -720,10 +731,12 @@ export default function Dashboard() {
       const expHTML_Gallego = experienceList.map(exp => `
         <div class="entry-item">
           <div class="entry-header">
-            <h4 class="entry-title">${exp.role}</h4>
+            <div>
+              <h4 class="entry-title">${exp.role}</h4>
+              <span class="entry-sub">${exp.company}</span>
+            </div>
             <span class="entry-year">${exp.duration}</span>
           </div>
-          <span class="entry-sub">${exp.company}</span>
           <p class="entry-desc">${exp.desc || ''}</p>
         </div>
       `).join('');
@@ -731,19 +744,21 @@ export default function Dashboard() {
       const eduHTML_Gallego = educationList.map(e => `
         <div class="entry-item">
           <div class="entry-header">
-            <h4 class="entry-title">${e.school}</h4>
+            <div>
+              <h4 class="entry-title">${e.school}</h4>
+              <span class="entry-sub">${e.degree}</span>
+            </div>
             <span class="entry-year">${e.year}</span>
           </div>
-          <span class="entry-sub">${e.degree}</span>
         </div>
       `).join('');
       
       const refHTML_Gallego = referenceList.map(r => `
         <div class="ref-item">
           <strong>${r.name}</strong>
-          <span style="color: #3b82f6; font-weight: 600; margin-bottom: 2px;">${r.relation}</span>
-          <span style="color: #6B7280;">Phone: ${r.phone}</span>
-          <span style="color: #6B7280;">Email: ${r.email}</span>
+          <span>${r.relation}</span>
+          <span>Phone: ${r.phone}</span>
+          <span>Email: ${r.email}</span>
         </div>
       `).join('');
 
@@ -755,64 +770,77 @@ export default function Dashboard() {
             </div>
             <h1>${userName}</h1>
             <span class="title-tag">${userTitle}</span>
-            
-            <h2>Contact</h2>
-            <div class="contact-item">📞 ${userPhone}</div>
-            <div class="contact-item">✉️ ${userEmail}</div>
-            ${userWebsite ? `<div class="contact-item">🌐 ${userWebsite}</div>` : ''}
-            <div class="contact-item">📍 ${userLocation}</div>
-            
-            <h2>Skills</h2>
-            <ul class="bullet-list">${skillsHTML_Gallego}</ul>
-            
-            <h2>Language</h2>
-            <ul class="bullet-list">${langHTML_Gallego}</ul>
+
+            <div class="section-title">Contact</div>
+            <div class="section-divider"></div>
+            <div class="contact-item"><strong>Phone</strong><span>${userPhone}</span></div>
+            <div class="contact-item"><strong>Email</strong><span>${userEmail}</span></div>
+            ${userWebsite ? `<div class="contact-item"><strong>Website</strong><span>${userWebsite}</span></div>` : ''}
+            <div class="contact-item"><strong>Location</strong><span>${userLocation}</span></div>
+
+            <div class="section-title">Skills</div>
+            <div class="section-divider"></div>
+            <ul class="left-list">${skillsHTML_Gallego}</ul>
+
+            <div class="section-title">Language</div>
+            <div class="section-divider"></div>
+            <ul class="left-list">${langHTML_Gallego}</ul>
           </div>
           <div class="right-col">
-            <h2 style="margin-top: 0;">About Me</h2>
-            <p>${userBio}</p>
-            
+            <h2>About Me</h2>
+            <div class="section-divider"></div>
+            <p>${userBio || ''}</p>
+
             <h2>Work Experience</h2>
-            <div>${expHTML_Gallego}</div>
-            
+            <div class="section-divider"></div>
+            ${expHTML_Gallego}
+
             <h2>Education</h2>
-            <div>${eduHTML_Gallego}</div>
-            
+            <div class="section-divider"></div>
+            ${eduHTML_Gallego}
+
             ${referenceList.length > 0 ? `
               <h2>References</h2>
+              <div class="section-divider"></div>
               <div class="ref-grid">${refHTML_Gallego}</div>
             ` : ''}
           </div>
         </div>
       `;
     } else if (selectedTemplate === 3) {
-      // Isabel Schumacher styling
-      templateStyles = `
-        body { font-family: 'Outfit', 'Inter', sans-serif; color: #2D3748; margin: 0; padding: 0; line-height: 1.5; background: #fff; }
-        .resume-container { display: grid; grid-template-columns: 260px 1fr; max-width: 800px; margin: 0 auto; min-height: 100vh; }
-        .left-col { background: #2B2D42; color: #ffffff; padding: 40px 24px; }
-        .right-col { background: #ffffff; padding: 45px 35px; }
-        
-        .avatar-container { text-align: center; margin-bottom: 25px; }
-        .avatar { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid #ffffff; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
-        
-        .left-col h2 { font-size: 13px; font-weight: 700; color: #ffffff; border-bottom: 2px solid rgba(255,255,255,0.2); padding-bottom: 6px; margin: 25px 0 12px; text-transform: uppercase; letter-spacing: 1px; }
-        .left-col p { font-size: 11px; color: #E2E8F0; line-height: 1.6; }
-        
-        .contact-item { font-size: 11px; color: #E2E8F0; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
-        
-        .bullet-list { margin: 0; padding-left: 15px; font-size: 11px; color: #E2E8F0; }
-        .bullet-list li { margin-bottom: 6px; }
-        
-        .right-col h1 { font-size: 36px; font-weight: 800; color: #2B2D42; margin: 0 0 5px; }
-        .right-col .title-tag { font-size: 15px; color: #4A5568; font-weight: 600; margin-bottom: 35px; text-transform: uppercase; letter-spacing: 1px; }
+      // Isabel Schumacher styling (clean printed CV)
+      templateStyles = printBaseStyles + `
+        body { font-family: 'Outfit', 'Inter', sans-serif; color: #1f2937; margin: 0; padding: 0; background: #f3f4f6; }
+        html, body { min-height: 100%; }
+        .resume-container { display: grid; grid-template-columns: 260px 1fr; width: 100%; max-width: 920px; min-height: 100vh; margin: 0 auto; background: #ffffff; }
+        .left-col { background: #17191f; color: #ffffff; padding: 42px 30px; display: flex; flex-direction: column; }
+        .right-col { background: #ffffff; padding: 44px 40px; }
+
+        .avatar-container { display: flex; justify-content: center; margin-bottom: 24px; }
+        .avatar { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid rgba(255,255,255,0.18); box-shadow: 0 14px 28px rgba(0,0,0,0.16); }
+
+        .left-col h2 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin: 24px 0 10px; color: rgba(255,255,255,0.95); border-bottom: 2px solid #3b82f6; padding-bottom: 6px; }
+        .left-col .title-tag { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: rgba(255,255,255,0.7); text-align: center; margin-bottom: 32px; }
+        .section-divider { width: 100%; height: 1px; background: #111827; margin-bottom: 16px; }
+
+        .left-col p, .contact-item span, .bullet-list li { font-size: 11.5px; color: rgba(255,255,255,0.9); line-height: 1.75; }
+        .left-col p { margin: 0; }
+
+        .contact-item { margin-bottom: 12px; }
+        .contact-item span { display: block; }
+
+        .bullet-list { margin: 0; padding-left: 18px; list-style: disc; color: rgba(255,255,255,0.9); }
+        .bullet-list li { margin-bottom: 10px; }
+
+        .right-col h1 { font-size: 34px; font-weight: 900; margin: 0 0 8px; color: #111827; }
+        .right-col .title-tag { display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: #4b5563; margin-bottom: 28px; }
         
         .right-col h2 { font-size: 15px; font-weight: 800; color: #2B2D42; margin: 30px 0 15px; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; }
         
         /* Vertical Timeline styling */
-        .timeline-container { border-left: 2px solid #2B2D42; margin-left: 10px; padding-left: 24px; position: relative; }
+        .timeline-container { border-left: 2px solid #111827; margin-left: 10px; padding-left: 24px; position: relative; }
         .timeline-item { margin-bottom: 20px; position: relative; }
-        .timeline-marker { width: 10px; height: 10px; background: #2B2D42; border-radius: 50%; position: absolute; left: -30px; top: 5px; border: 2px solid #ffffff; box-shadow: 0 0 0 2px #2B2D42; }
+        .timeline-marker { width: 10px; height: 10px; background: #3b82f6; border-radius: 50%; position: absolute; left: -30px; top: 5px; border: 2px solid #ffffff; box-shadow: 0 0 0 2px #3b82f6; }
         .timeline-title { font-size: 13px; font-weight: 700; color: #1a202c; margin: 0 0 2px; text-transform: uppercase; }
         .timeline-sub { font-size: 11.5px; font-weight: 600; color: #4A5568; display: block; margin-bottom: 5px; }
         .timeline-desc { font-size: 11px; color: #4A5568; margin: 0; line-height: 1.5; }
@@ -897,45 +925,46 @@ export default function Dashboard() {
       `;
     } else {
       // Richard Sanchez styling
-      templateStyles = `
+      templateStyles = printBaseStyles + `
         body { font-family: 'Outfit', 'Inter', sans-serif; color: #333; margin: 0; padding: 0; line-height: 1.5; background: #fff; }
-        
+        html, body { min-height: 100%; }
+
         .header-banner { background: #003F88; color: #ffffff; padding: 35px 40px; display: flex; align-items: center; justify-content: space-between; max-width: 800px; margin: 0 auto; border-bottom: 5px solid #002855; }
         .banner-left { display: flex; align-items: center; gap: 25px; }
         .avatar { width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 4px solid #ffffff; box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
         .banner-left h1 { font-size: 32px; margin: 0; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #ffffff; }
         .banner-left .title-tag { font-size: 14px; color: #93C5FD; font-weight: 700; margin-top: 4px; text-transform: uppercase; letter-spacing: 1.5px; }
-        
+
         .banner-right { font-size: 11.5px; text-align: right; line-height: 1.6; color: #E0F2FE; }
         .banner-right div { margin-bottom: 4px; }
-        
+
         .resume-container { max-width: 800px; margin: 0 auto; background: #fff; display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
         .left-col { background: #1a1a1c; color: #ffffff; padding: 35px 24px; }
         .right-col { padding: 40px 30px; background: #ffffff; }
-        
+
         .left-col h2 { font-size: 12px; font-weight: 700; color: #ffffff; border-bottom: 2px solid #003F88; padding-bottom: 5px; margin: 25px 0 12px; text-transform: uppercase; letter-spacing: 1px; }
         .left-col p { font-size: 11px; color: #cbd5e1; line-height: 1.6; }
-        
+
         .lang-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
         .lang-pill { background: #374151; color: #ffffff; font-size: 10.5px; font-weight: 600; padding: 4px 10px; border-radius: 12px; text-transform: uppercase; }
-        
+
         .expertise-list { margin: 0; padding-left: 15px; font-size: 11.5px; color: #cbd5e1; }
         .expertise-list li { margin-bottom: 6px; }
-        
+
         .capsule-header { background: #003F88; color: #ffffff; padding: 6px 16px; border-radius: 20px; font-size: 11.5px; font-weight: 700; display: inline-block; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 15px; }
-        
+
         .entry-item { margin-bottom: 18px; }
         .entry-title-row { display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; color: #111827; margin-bottom: 3px; }
         .entry-sub { font-size: 11.5px; color: #4B5563; font-weight: 600; display: block; margin-bottom: 4px; }
         .entry-desc { font-size: 11px; color: #4B5563; margin: 0; line-height: 1.5; }
         .entry-bullets { margin: 4px 0 0; padding-left: 15px; font-size: 11px; color: #4B5563; }
         .entry-bullets li { margin-bottom: 3px; }
-        
+
         .skill-progress-row { margin-bottom: 12px; }
         .skill-progress-header { display: flex; justify-content: space-between; font-size: 11px; font-weight: 600; color: #374151; margin-bottom: 4px; text-transform: uppercase; }
         .skill-progress-bg { background: #E2E8F0; height: 6px; border-radius: 3px; overflow: hidden; }
         .skill-progress-fill { background: #003F88; height: 100%; }
-        
+
         .ref-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .ref-item strong { font-size: 12px; color: #111827; display: block; }
         .ref-item span { font-size: 11px; color: #4B5563; display: block; }
