@@ -536,11 +536,21 @@ export default function Dashboard() {
     const userBio = profile.bio || '';
     const userWebsite = profile.website || 'www.reallygreatsite.com';
 
+    const printBaseStyles = `
+      * { box-sizing: border-box; }
+      html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      @page { size: A4 portrait; margin: 12mm; }
+      body { margin: 0; padding: 0; background: #fff; color: #333; }
+      img { display: block; max-width: 100%; }
+      a { color: inherit; text-decoration: none; }
+      .resume-container { width: 100%; max-width: 850px; margin: 0 auto; }
+    `;
+
     if (selectedTemplate === 1) {
       // Juliana Silva styling
-      templateStyles = `
-        body { font-family: 'Inter', sans-serif; color: #333; margin: 0; padding: 0; line-height: 1.5; background: #fff; }
-        .resume-container { display: grid; grid-template-columns: 260px 1fr; max-width: 800px; margin: 0 auto; min-height: 100vh; }
+      templateStyles = printBaseStyles + `
+        body { font-family: 'Inter', sans-serif; line-height: 1.5; background: #fff; }
+        .resume-container { display: grid; grid-template-columns: 260px 1fr; max-width: 850px; min-height: 100vh; }
         .left-col { background: #ECEEF0; padding: 40px 24px; color: #1F2937; }
         .right-col { background: #ffffff; padding: 40px 30px; }
         
@@ -1032,8 +1042,11 @@ export default function Dashboard() {
     }
 
     printWindow.document.write(`
-      <html>
+      <!DOCTYPE html>
+      <html lang="en">
         <head>
+          <meta charset="utf-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
           <title>${userName} - CV</title>
           <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
           <style>
@@ -1048,9 +1061,12 @@ export default function Dashboard() {
           ${templateHTML}
           <script>
             window.onload = function() {
-              setTimeout(function() {
-                window.print();
-              }, 500);
+              const printNow = () => setTimeout(() => window.print(), 300);
+              if (document.fonts && document.fonts.ready) {
+                document.fonts.ready.then(printNow).catch(printNow);
+              } else {
+                printNow();
+              }
             };
           </script>
         </body>
