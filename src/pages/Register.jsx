@@ -4,6 +4,7 @@ import { FcGoogle } from 'react-icons/fc';
 import { Upload, Check } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { userApi } from '../api/userApi';
+import { locationData } from '../data/locationData';
 import registerHandshake from '../assets/register_handshake.png';
 import './Register.css';
 
@@ -40,6 +41,15 @@ export default function Register() {
   const [uploadedFileName, setUploadedFileName] = useState('');
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
+
+  // Derived location options
+  const availableCountries = Object.keys(locationData);
+  const selectedCountryData = locationData[profileData.country];
+  const availableRegions = selectedCountryData ? selectedCountryData.regions : [];
+  const selectedRegionData = availableRegions.find(
+    (r) => r.name === profileData.region || r.label === profileData.region
+  );
+  const availableCities = selectedRegionData ? selectedRegionData.cities : [];
 
   // Validation routines
   const validateCredentials = (name, value) => {
@@ -125,9 +135,36 @@ export default function Register() {
   // Step 3 Handlers
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
-    setProfileData((prev) => ({ ...prev, [name]: value }));
-    if (touched[name]) {
-      setErrors((prev) => ({ ...prev, [name]: validateProfile(name, value) }));
+
+    if (name === 'country') {
+      setProfileData((prev) => ({
+        ...prev,
+        country: value,
+        region: '',
+        city: '',
+      }));
+      setErrors((prev) => ({
+        ...prev,
+        country: validateProfile('country', value),
+        region: '',
+        city: '',
+      }));
+    } else if (name === 'region') {
+      setProfileData((prev) => ({
+        ...prev,
+        region: value,
+        city: '',
+      }));
+      setErrors((prev) => ({
+        ...prev,
+        region: validateProfile('region', value),
+        city: '',
+      }));
+    } else {
+      setProfileData((prev) => ({ ...prev, [name]: value }));
+      if (touched[name]) {
+        setErrors((prev) => ({ ...prev, [name]: validateProfile(name, value) }));
+      }
     }
   };
 
@@ -473,11 +510,11 @@ export default function Register() {
                   onBlur={handleProfileBlur}
                 >
                   <option value="">Please select Country</option>
-                  <option value="Sri Lanka">Sri Lanka</option>
-                  <option value="United States">United States</option>
-                  <option value="United Kingdom">United Kingdom</option>
-                  <option value="Australia">Australia</option>
-                  <option value="India">India</option>
+                  {availableCountries.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
                 </select>
                 {errors.country && touched.country && (
                   <span className="form-error">{errors.country}</span>
@@ -496,11 +533,11 @@ export default function Register() {
                   disabled={!profileData.country}
                 >
                   <option value="">Please select Region</option>
-                  <option value="Western">Western Province</option>
-                  <option value="Central">Central Province</option>
-                  <option value="Southern">Southern Province</option>
-                  <option value="California">California</option>
-                  <option value="Texas">Texas</option>
+                  {availableRegions.map((reg) => (
+                    <option key={reg.name} value={reg.name}>
+                      {reg.label}
+                    </option>
+                  ))}
                 </select>
                 {errors.region && touched.region && (
                   <span className="form-error">{errors.region}</span>
@@ -519,11 +556,11 @@ export default function Register() {
                   disabled={!profileData.region}
                 >
                   <option value="">Please select City</option>
-                  <option value="Colombo">Colombo</option>
-                  <option value="Gampaha">Gampaha</option>
-                  <option value="Homagama">Homagama</option>
-                  <option value="Los Angeles">Los Angeles</option>
-                  <option value="San Francisco">San Francisco</option>
+                  {availableCities.map((city) => (
+                    <option key={city} value={city}>
+                      {city}
+                    </option>
+                  ))}
                 </select>
                 {errors.city && touched.city && (
                   <span className="form-error">{errors.city}</span>
