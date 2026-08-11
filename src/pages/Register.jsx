@@ -26,6 +26,9 @@ export default function Register() {
 
   // Step 3 Profile Data state
   const [profileData, setProfileData] = useState({
+
+
+    
     firstName: '',
     lastName: '',
     email: '',
@@ -465,20 +468,15 @@ export default function Register() {
               {/* Country */}
               <div className={`form-group ${errors.country && touched.country ? 'form-group--error' : ''}`}>
                 <label className="form-label">Country *</label>
-                <select
+                <input
+                  type="text"
                   name="country"
-                  className="form-input form-select"
+                  className="form-input"
+                  placeholder="Enter your country"
                   value={profileData.country}
                   onChange={handleProfileChange}
                   onBlur={handleProfileBlur}
-                >
-                  <option value="">Please select Country</option>
-                  <option value="Sri Lanka">Sri Lanka</option>
-                  <option value="United States">United States</option>
-                  <option value="United Kingdom">United Kingdom</option>
-                  <option value="Australia">Australia</option>
-                  <option value="India">India</option>
-                </select>
+                />
                 {errors.country && touched.country && (
                   <span className="form-error">{errors.country}</span>
                 )}
@@ -487,21 +485,15 @@ export default function Register() {
               {/* Region */}
               <div className={`form-group ${errors.region && touched.region ? 'form-group--error' : ''}`}>
                 <label className="form-label">Region *</label>
-                <select
+                <input
+                  type="text"
                   name="region"
-                  className="form-input form-select"
+                  className="form-input"
+                  placeholder="Enter your region"
                   value={profileData.region}
                   onChange={handleProfileChange}
                   onBlur={handleProfileBlur}
-                  disabled={!profileData.country}
-                >
-                  <option value="">Please select Region</option>
-                  <option value="Western">Western Province</option>
-                  <option value="Central">Central Province</option>
-                  <option value="Southern">Southern Province</option>
-                  <option value="California">California</option>
-                  <option value="Texas">Texas</option>
-                </select>
+                />
                 {errors.region && touched.region && (
                   <span className="form-error">{errors.region}</span>
                 )}
@@ -510,21 +502,15 @@ export default function Register() {
               {/* City */}
               <div className={`form-group ${errors.city && touched.city ? 'form-group--error' : ''}`}>
                 <label className="form-label">City *</label>
-                <select
+                <input
+                  type="text"
                   name="city"
-                  className="form-input form-select"
+                  className="form-input"
+                  placeholder="Enter your city"
                   value={profileData.city}
                   onChange={handleProfileChange}
                   onBlur={handleProfileBlur}
-                  disabled={!profileData.region}
-                >
-                  <option value="">Please select City</option>
-                  <option value="Colombo">Colombo</option>
-                  <option value="Gampaha">Gampaha</option>
-                  <option value="Homagama">Homagama</option>
-                  <option value="Los Angeles">Los Angeles</option>
-                  <option value="San Francisco">San Francisco</option>
-                </select>
+                />
                 {errors.city && touched.city && (
                   <span className="form-error">{errors.city}</span>
                 )}

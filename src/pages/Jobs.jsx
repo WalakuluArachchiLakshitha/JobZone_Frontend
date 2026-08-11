@@ -38,6 +38,9 @@ export default function Jobs() {
   });
   const [selectedLocationFilter, setSelectedLocationFilter] = useState([]);
   const [selectedSectorFilter, setSelectedSectorFilter] = useState([]);
+  const [selectedGenderFilter, setSelectedGenderFilter] = useState([]);
+  const [selectedSalaryFilter, setSelectedSalaryFilter] = useState([]);
+  const [selectedDatePostedFilter, setSelectedDatePostedFilter] = useState([]);
 
   // UI state
   const [sortBy, setSortBy] = useState('relevance');
@@ -49,6 +52,16 @@ export default function Jobs() {
     gender: true,
     salary: true,
   });
+
+  // Map frontend date labels to backend keys
+  const DATE_POSTED_KEY_MAP = {
+    'Last Hour': '1h',
+    'Last 24 hours': '24h',
+    'Last week': '7d',
+    'Last 2 weeks': '14d',
+    'Last month': '30d',
+    'All': 'all',
+  };
 
   // Backend fetched state
   const [jobsList, setJobsList] = useState([]);
@@ -71,25 +84,45 @@ export default function Jobs() {
           queryParams.search = activeSearch;
         }
         
-        // Use search location or sidebar location filter
+        // Use search location or sidebar location filter (comma-separated)
         if (activeLocation) {
           queryParams.location = activeLocation;
         } else if (selectedLocationFilter.length > 0) {
-          const firstLoc = selectedLocationFilter[0];
-          if (firstLoc !== 'Foreign Jobs') {
-            queryParams.location = firstLoc;
+          const nonForeign = selectedLocationFilter.filter((l) => l !== 'Foreign Jobs');
+          if (nonForeign.length > 0) {
+            queryParams.location = nonForeign.join(',');
           }
         }
 
-        // Use search sector or sidebar sector filter
+        // Use search sector or sidebar sector filter (comma-separated)
         if (activeSector) {
           queryParams.category = activeSector;
         } else if (selectedSectorFilter.length > 0 && !selectedSectorFilter.includes('All')) {
-          queryParams.category = selectedSectorFilter[0];
+          queryParams.category = selectedSectorFilter.join(',');
         }
 
+        // Job types (comma-separated)
         if (selectedTypes.length > 0) {
-          queryParams.type = selectedTypes[0];
+          queryParams.type = selectedTypes.join(',');
+        }
+
+        // Gender filter (comma-separated)
+        if (selectedGenderFilter.length > 0) {
+          queryParams.gender = selectedGenderFilter.join(',');
+        }
+
+        // Salary range filter (comma-separated labels)
+        if (selectedSalaryFilter.length > 0) {
+          queryParams.salaryRange = selectedSalaryFilter.join(',');
+        }
+
+        // Date posted filter (use the most recent / narrowest selection)
+        if (selectedDatePostedFilter.length > 0 && !selectedDatePostedFilter.includes('All')) {
+          // Pick the narrowest (first in order) selected range
+          const dateKey = DATE_POSTED_KEY_MAP[selectedDatePostedFilter[0]] || 'all';
+          if (dateKey !== 'all') {
+            queryParams.datePosted = dateKey;
+          }
         }
 
         // Map sorting
@@ -115,7 +148,7 @@ export default function Jobs() {
     };
 
     fetchJobs();
-  }, [activeSearch, activeLocation, activeSector, selectedLocationFilter, selectedSectorFilter, selectedTypes, sortBy, currentPage]);
+  }, [activeSearch, activeLocation, activeSector, selectedLocationFilter, selectedSectorFilter, selectedTypes, selectedGenderFilter, selectedSalaryFilter, selectedDatePostedFilter, sortBy, currentPage]);
 
   const toggleSection = (section) => {
     setCollapsedSections((prev) => ({ ...prev, [section]: !prev[section] }));
@@ -132,6 +165,9 @@ export default function Jobs() {
     setSelectedTypes([]);
     setSelectedLocationFilter([]);
     setSelectedSectorFilter([]);
+    setSelectedGenderFilter([]);
+    setSelectedSalaryFilter([]);
+    setSelectedDatePostedFilter([]);
     setActiveSearch('');
     setActiveLocation('');
     setActiveSector('');
@@ -158,14 +194,20 @@ export default function Jobs() {
     selectedTypes.forEach((t) => filters.push({ type: 'type', label: t, value: t }));
     selectedLocationFilter.forEach((l) => filters.push({ type: 'locFilter', label: l, value: l }));
     selectedSectorFilter.forEach((s) => filters.push({ type: 'secFilter', label: s, value: s }));
+    selectedGenderFilter.forEach((g) => filters.push({ type: 'genderFilter', label: `Gender: ${g}`, value: g }));
+    selectedSalaryFilter.forEach((s) => filters.push({ type: 'salaryFilter', label: `Salary: ${s}`, value: s }));
+    selectedDatePostedFilter.forEach((d) => filters.push({ type: 'dateFilter', label: `Posted: ${d}`, value: d }));
     return filters;
-  }, [activeSearch, activeLocation, activeSector, selectedTypes, selectedLocationFilter, selectedSectorFilter]);
+  }, [activeSearch, activeLocation, activeSector, selectedTypes, selectedLocationFilter, selectedSectorFilter, selectedGenderFilter, selectedSalaryFilter, selectedDatePostedFilter]);
 
   const removeFilter = (type, value) => {
     switch (type) {
       case 'type': setSelectedTypes((p) => p.filter((v) => v !== value)); break;
       case 'locFilter': setSelectedLocationFilter((p) => p.filter((v) => v !== value)); break;
       case 'secFilter': setSelectedSectorFilter((p) => p.filter((v) => v !== value)); break;
+      case 'genderFilter': setSelectedGenderFilter((p) => p.filter((v) => v !== value)); break;
+      case 'salaryFilter': setSelectedSalaryFilter((p) => p.filter((v) => v !== value)); break;
+      case 'dateFilter': setSelectedDatePostedFilter((p) => p.filter((v) => v !== value)); break;
       case 'search': setActiveSearch(''); setSearchTitle(''); break;
       case 'location': setActiveLocation(''); setSearchLocation(''); break;
       case 'sector': setActiveSector(''); setSearchSector(''); break;
@@ -260,16 +302,23 @@ export default function Jobs() {
         </button>
         {!collapsedSections.type && (
           <div className="jobs-filters__options">
-            {['Freelance', 'Full time', 'Intern', 'Part time'].map((type) => (
-              <label key={type} className="jobs-filters__checkbox" htmlFor={`filter-type-${type}`}>
+            {[
+              { label: 'Freelance', value: 'freelance' },
+              { label: 'Full time', value: 'full-time' },
+              { label: 'Internship', value: 'internship' },
+              { label: 'Part time', value: 'part-time' },
+              { label: 'Contract', value: 'contract' },
+              { label: 'Remote', value: 'remote' },
+            ].map(({ label, value }) => (
+              <label key={value} className="jobs-filters__checkbox" htmlFor={`filter-type-${value}`}>
                 <input
                   type="checkbox"
-                  id={`filter-type-${type}`}
-                  checked={selectedTypes.includes(type)}
-                  onChange={() => toggleFilter(selectedTypes, setSelectedTypes, type)}
+                  id={`filter-type-${value}`}
+                  checked={selectedTypes.includes(value)}
+                  onChange={() => toggleFilter(selectedTypes, setSelectedTypes, value)}
                 />
                 <span className="jobs-filters__checkmark" />
-                <span className="jobs-filters__label">{type}</span>
+                <span className="jobs-filters__label">{label}</span>
               </label>
             ))}
           </div>
@@ -288,9 +337,14 @@ export default function Jobs() {
         </button>
         {!collapsedSections.gender && (
           <div className="jobs-filters__options">
-            {['Male', 'Female', 'Any'].map((gender) => (
+            {['Male', 'Female'].map((gender) => (
               <label key={gender} className="jobs-filters__checkbox" htmlFor={`filter-gender-${gender}`}>
-                <input type="checkbox" id={`filter-gender-${gender}`} />
+                <input
+                  type="checkbox"
+                  id={`filter-gender-${gender}`}
+                  checked={selectedGenderFilter.includes(gender)}
+                  onChange={() => toggleFilter(selectedGenderFilter, setSelectedGenderFilter, gender)}
+                />
                 <span className="jobs-filters__checkmark" />
                 <span className="jobs-filters__label">{gender}</span>
               </label>
@@ -313,7 +367,12 @@ export default function Jobs() {
           <div className="jobs-filters__options">
             {['$0 - $50k', '$50k - $100k', '$100k - $150k', '$150k - $200k', '$200k+'].map((sal) => (
               <label key={sal} className="jobs-filters__checkbox" htmlFor={`filter-sal-${sal}`}>
-                <input type="checkbox" id={`filter-sal-${sal}`} />
+                <input
+                  type="checkbox"
+                  id={`filter-sal-${sal}`}
+                  checked={selectedSalaryFilter.includes(sal)}
+                  onChange={() => toggleFilter(selectedSalaryFilter, setSelectedSalaryFilter, sal)}
+                />
                 <span className="jobs-filters__checkmark" />
                 <span className="jobs-filters__label">{sal}</span>
               </label>
@@ -336,7 +395,12 @@ export default function Jobs() {
           <div className="jobs-filters__options">
             {['Last Hour', 'Last 24 hours', 'Last week', 'Last 2 weeks', 'Last month', 'All'].map((date) => (
               <label key={date} className="jobs-filters__checkbox" htmlFor={`filter-date-${date}`}>
-                <input type="checkbox" id={`filter-date-${date}`} defaultChecked={date === 'All'} />
+                <input
+                  type="checkbox"
+                  id={`filter-date-${date}`}
+                  checked={selectedDatePostedFilter.includes(date)}
+                  onChange={() => toggleFilter(selectedDatePostedFilter, setSelectedDatePostedFilter, date)}
+                />
                 <span className="jobs-filters__checkmark" />
                 <span className="jobs-filters__label">{date}</span>
               </label>

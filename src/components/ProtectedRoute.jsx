@@ -1,8 +1,26 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
+const normalizeRole = (value) => {
+  if (typeof value !== 'string') return 'candidate';
+
+  const role = value.trim().toLowerCase();
+  if (!role) return 'candidate';
+
+  if (['candidate', 'jobseeker', 'job seeker', 'seeker', 'job-seeker'].includes(role)) {
+    return 'candidate';
+  }
+
+  if (['employer', 'company', 'recruiter', 'hiring-manager', 'hiring_manager', 'hire'].includes(role)) {
+    return 'employer';
+  }
+
+  return role;
+};
+
 export default function ProtectedRoute({ children, allowedRoles }) {
   const { isAuthenticated, isLoading, role } = useAuth();
+  const normalizedRole = normalizeRole(role || localStorage.getItem('jobzoneUserRole') || 'candidate');
 
   if (isLoading) {
     return (
@@ -16,7 +34,7 @@ export default function ProtectedRoute({ children, allowedRoles }) {
     return <Navigate to="/login" replace />;
   }
 
-  if (allowedRoles && !allowedRoles.includes(role)) {
+  if (allowedRoles && !allowedRoles.some((allowedRole) => normalizeRole(allowedRole) === normalizedRole)) {
     return <Navigate to="/" replace />;
   }
 

@@ -12,8 +12,12 @@ import { jobsApi } from '../api/jobsApi';
 import './PostVacancy.css';
 
 export default function PostVacancy() {
-  const { isAuthenticated: isLoggedIn, role: userRole } = useAuth();
+  const { isAuthenticated: isLoggedIn, role: contextRole } = useAuth();
   const navigate = useNavigate();
+
+  // Read role from context first; fall back to localStorage if context is still
+  // hydrating (user is null between token-restore and profile-fetch re-renders).
+  const userRole = contextRole || localStorage.getItem('jobzoneUserRole') || '';
 
   // Company Details Form States
   const [companyName, setCompanyName] = useState('');
@@ -196,8 +200,7 @@ export default function PostVacancy() {
                 You are not allowed to post a job. Only an Employer can post a job.
               </h2>
             </div>
-          ) : (
-            /* ===== REDESIGNED EMPLOYER FORM ===== */
+          ) : userRole === 'employer' ? (
             <div className="vacancy-form-redesign animate-fadeInUp">
               {postedSuccess && (
                 <div className="vacancy-form-card__success">
@@ -476,6 +479,16 @@ export default function PostVacancy() {
                 </div>
 
               </form>
+            </div>
+          ) : (
+            /* Any other logged-in role (e.g. admin) — show the candidate blocked screen */
+            <div className="candidate-restricted-card animate-fadeInUp">
+              <div className="candidate-restricted-icon-wrap">
+                <XCircle size={48} className="candidate-restricted-icon" />
+              </div>
+              <h2 className="candidate-restricted-message">
+                This page is for employers only.
+              </h2>
             </div>
           )}
         </div>

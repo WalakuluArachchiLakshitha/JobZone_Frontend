@@ -4,6 +4,33 @@ import { userApi } from '../api/userApi';
 
 const AuthContext = createContext(null);
 
+const normalizeRole = (value) => {
+  if (typeof value !== 'string') return 'candidate';
+
+  const role = value.trim().toLowerCase();
+  if (!role) return 'candidate';
+
+  if (['candidate', 'jobseeker', 'job seeker', 'seeker', 'job-seeker'].includes(role)) {
+    return 'candidate';
+  }
+
+  if (['employer', 'company', 'recruiter', 'hiring-manager', 'hiring_manager', 'hire'].includes(role)) {
+    return 'employer';
+  }
+
+  return role;
+};
+
+const normalizeUserData = (userData) => {
+  if (!userData) return null;
+
+  const roleSource = userData.role || userData.userType || userData.accountType || userData.type || userData.userRole;
+  return {
+    ...userData,
+    role: normalizeRole(roleSource),
+  };
+};
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
@@ -19,10 +46,9 @@ export function AuthProvider({ children }) {
     }
 
     if (userData) {
-      localStorage.setItem('jobzone_user', JSON.stringify(userData));
-      // Map back seeker to candidate for frontend role compatibility
-      const feRole = userData.role === 'seeker' ? 'candidate' : userData.role;
-      localStorage.setItem('jobzoneUserRole', feRole);
+      const normalizedUser = normalizeUserData(userData);
+      localStorage.setItem('jobzone_user', JSON.stringify(normalizedUser));
+      localStorage.setItem('jobzoneUserRole', normalizedUser.role);
     } else {
       localStorage.removeItem('jobzone_user');
       localStorage.removeItem('jobzoneUserRole');
@@ -37,15 +63,17 @@ export function AuthProvider({ children }) {
       if (storedToken) {
         setToken(storedToken);
         if (storedUser) {
-          setUser(JSON.parse(storedUser));
+          const parsedUser = JSON.parse(storedUser);
+          setUser(normalizeUserData(parsedUser));
         }
         
         try {
           // Fetch fresh profile from API
           const response = await userApi.getProfile();
           if (response.success && response.user) {
-            setUser(response.user);
-            syncLocalStorage(storedToken, response.user);
+            const normalizedUser = normalizeUserData(response.user);
+            setUser(normalizedUser);
+            syncLocalStorage(storedToken, normalizedUser);
           }
         } catch (error) {
           console.error('Failed to validate token/get profile:', error);
@@ -66,10 +94,11 @@ export function AuthProvider({ children }) {
     try {
       const response = await authApi.login(email, password);
       if (response.success) {
+        const normalizedUser = normalizeUserData(response.user);
         setToken(response.token);
-        setUser(response.user);
-        syncLocalStorage(response.token, response.user);
-        return { success: true, user: response.user };
+        setUser(normalizedUser);
+        syncLocalStorage(response.token, normalizedUser);
+        return { success: true, user: normalizedUser };
       }
       return { success: false, message: response.message || 'Login failed' };
     } catch (error) {
@@ -84,10 +113,11 @@ export function AuthProvider({ children }) {
     try {
       const response = await authApi.register(data);
       if (response.success) {
+        const normalizedUser = normalizeUserData(response.user);
         setToken(response.token);
-        setUser(response.user);
-        syncLocalStorage(response.token, response.user);
-        return { success: true, user: response.user };
+        setUser(normalizedUser);
+        syncLocalStorage(response.token, normalizedUser);
+        return { success: true, user: normalizedUser };
       }
       return { success: false, message: response.message || 'Registration failed' };
     } catch (error) {
@@ -108,10 +138,11 @@ export function AuthProvider({ children }) {
     try {
       const response = await authApi.googleLogin(credential);
       if (response.success) {
+        const normalizedUser = normalizeUserData(response.user);
         setToken(response.token);
-        setUser(response.user);
-        syncLocalStorage(response.token, response.user);
-        return { success: true, user: response.user };
+        setUser(normalizedUser);
+        syncLocalStorage(response.token, normalizedUser);
+        return { success: true, user: normalizedUser };
       }
       return { success: false, message: response.message || 'Google login failed' };
     } catch (error) {
@@ -125,9 +156,11 @@ export function AuthProvider({ children }) {
     try {
       const response = await userApi.getProfile();
       if (response.success && response.user) {
-        setUser(response.user);
-        localStorage.setItem('jobzone_user', JSON.stringify(response.user));
-        return response.user;
+        const normalizedUser = normalizeUserData(response.user);
+        setUser(normalizedUser);
+        localStorage.setItem('jobzone_user', JSON.stringify(normalizedUser));
+        localStorage.setItem('jobzoneUserRole', normalizedUser.role);
+        return normalizedUser;
       }
     } catch (error) {
       console.error('Failed to refresh user profile:', error);
@@ -145,7 +178,7 @@ export function AuthProvider({ children }) {
     logout,
     googleLogin,
     refreshUser,
-    role: user?.role === 'seeker' ? 'candidate' : user?.role || 'candidate'
+    role: normalizeRole(user?.role || user?.userType || user?.accountType || user?.type || user?.userRole || localStorage.getItem('jobzoneUserRole') || 'candidate')
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
