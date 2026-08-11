@@ -106,8 +106,9 @@ export default function CandidateDetail() {
   };
 
   const name = candidate ? (candidate.name || `${candidate.firstName} ${candidate.lastName}`) : '';
+  const serverOrigin = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/, '');
   const avatarUrl = candidate && candidate.avatar 
-    ? (candidate.avatar.startsWith('http') ? candidate.avatar : `http://localhost:5000${candidate.avatar}`) 
+    ? (candidate.avatar.startsWith('http') ? candidate.avatar : `${serverOrigin}${candidate.avatar.startsWith('/') ? candidate.avatar : `/${candidate.avatar}`}`) 
     : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&h=100&q=80';
   
   const roleName = candidate ? (candidate.title || 'Professional Seeker') : '';

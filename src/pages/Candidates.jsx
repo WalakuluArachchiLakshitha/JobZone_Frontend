@@ -480,8 +480,9 @@ export default function Candidates() {
                   candidatesList.map((cand, idx) => {
                     const candId = cand._id || cand.id;
                     const name = cand.name || `${cand.firstName} ${cand.lastName}`;
+                    const serverOrigin = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/, '');
                     const avatarUrl = cand.avatar 
-                      ? (cand.avatar.startsWith('http') ? cand.avatar : `http://localhost:5000${cand.avatar}`) 
+                      ? (cand.avatar.startsWith('http') ? cand.avatar : `${serverOrigin}${cand.avatar.startsWith('/') ? cand.avatar : `/${cand.avatar}`}`) 
                       : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&h=100&q=80';
                     const roleName = cand.title || 'Professional Seeker';
                     const candLocation = cand.location || 'Sri Lanka';
