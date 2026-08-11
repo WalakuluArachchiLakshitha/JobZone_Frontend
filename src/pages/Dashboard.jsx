@@ -181,30 +181,37 @@ export default function Dashboard() {
     return () => window.removeEventListener('jobzoneSavedJobsChanged', handleSavedJobsChanged);
   }, []);
 
-  // Sync to local storage
+  // Sync to local storage and backend
+  const initialLoad = useRef(true);
+  
   useEffect(() => {
+    // Keep local storage in sync for quick access
     localStorage.setItem('jobzoneResumeSkills', JSON.stringify(skills));
-  }, [skills]);
-
-  useEffect(() => {
     localStorage.setItem('jobzoneResumeEducation', JSON.stringify(educationList));
-  }, [educationList]);
-
-  useEffect(() => {
     localStorage.setItem('jobzoneResumeExperience', JSON.stringify(experienceList));
-  }, [experienceList]);
-
-  useEffect(() => {
     localStorage.setItem('jobzoneResumePortfolio', JSON.stringify(portfolioList));
-  }, [portfolioList]);
-
-  useEffect(() => {
     localStorage.setItem('jobzoneResumeLanguages', JSON.stringify(languageList));
-  }, [languageList]);
-
-  useEffect(() => {
     localStorage.setItem('jobzoneResumeReferences', JSON.stringify(referenceList));
-  }, [referenceList]);
+
+    if (initialLoad.current) {
+      initialLoad.current = false;
+      return;
+    }
+
+    if (role === 'candidate') {
+      const debounceTimer = setTimeout(() => {
+        resumeApi.updateResume({
+          skills,
+          education: educationList,
+          experience: experienceList,
+          portfolio: portfolioList,
+          languages: languageList,
+          references: referenceList
+        }).catch(err => console.error('Failed to sync resume to backend', err));
+      }, 1000);
+      return () => clearTimeout(debounceTimer);
+    }
+  }, [skills, educationList, experienceList, portfolioList, languageList, referenceList, role]);
 
   // Form toggle states
   const [showAddSkill, setShowAddSkill] = useState(false);

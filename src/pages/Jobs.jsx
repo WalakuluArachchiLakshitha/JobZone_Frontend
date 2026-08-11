@@ -13,6 +13,7 @@ import {
   FolderOpen 
 } from 'lucide-react';
 import { jobsApi } from '../api/jobsApi';
+import { alertsApi } from '../api/alertsApi';
 import JobCard from '../components/JobCard';
 import './Jobs.css';
 
@@ -52,6 +53,15 @@ export default function Jobs() {
     gender: true,
     salary: true,
   });
+
+  // State for "see more" toggles
+  const [showAllSectors, setShowAllSectors] = useState(false);
+
+  // Job Alert state
+  const [alertName, setAlertName] = useState('');
+  const [alertEmail, setAlertEmail] = useState('');
+  const [alertFrequency, setAlertFrequency] = useState('Weekly');
+  const [alertMessage, setAlertMessage] = useState('');
 
   // Map frontend date labels to backend keys
   const DATE_POSTED_KEY_MAP = {
@@ -216,6 +226,27 @@ export default function Jobs() {
     setCurrentPage(1);
   };
 
+  const handleCreateAlert = async () => {
+    if (!alertName || !alertEmail) {
+      setAlertMessage('Name and email are required');
+      return;
+    }
+    try {
+      setAlertMessage('Creating...');
+      const res = await alertsApi.createAlert({ name: alertName, email: alertEmail, frequency: alertFrequency });
+      if (res.success) {
+        setAlertMessage('Alert created successfully!');
+        setAlertName('');
+        setAlertEmail('');
+      } else {
+        setAlertMessage(res.message || 'Failed to create alert');
+      }
+    } catch (err) {
+      setAlertMessage('Error creating alert');
+    }
+    setTimeout(() => setAlertMessage(''), 3000);
+  };
+
   const getPageNumbers = () => {
     const pages = [];
     for (let i = 1; i <= totalPages; i++) pages.push(i);
@@ -276,7 +307,7 @@ export default function Jobs() {
               'Engineering & Technical',
               'Hospitality, Travel & Tourism',
               'Marketing, Sales & Business Development'
-            ].map((sec) => (
+            ].slice(0, showAllSectors ? undefined : 6).map((sec) => (
               <label key={sec} className="jobs-filters__checkbox" htmlFor={`filter-sec-${sec}`}>
                 <input
                   type="checkbox"
@@ -288,7 +319,13 @@ export default function Jobs() {
                 <span className="jobs-filters__label">{sec}</span>
               </label>
             ))}
-            <button type="button" className="jobs-filters__see-more">+ see more</button>
+            <button 
+              type="button" 
+              className="jobs-filters__see-more"
+              onClick={() => setShowAllSectors(!showAllSectors)}
+            >
+              {showAllSectors ? '- see less' : '+ see more'}
+            </button>
           </div>
         )}
       </div>
@@ -419,21 +456,46 @@ export default function Jobs() {
           <span>Email Me New Jobs</span>
         </div>
         <div className="jobs-alert-card__body">
-          <input type="text" placeholder="Job alert name..." className="jobs-alert-card__input" />
-          <input type="email" placeholder="example@email.com" className="jobs-alert-card__input" />
+          <input 
+            type="text" 
+            placeholder="Job alert name..." 
+            className="jobs-alert-card__input" 
+            value={alertName}
+            onChange={(e) => setAlertName(e.target.value)}
+          />
+          <input 
+            type="email" 
+            placeholder="example@email.com" 
+            className="jobs-alert-card__input" 
+            value={alertEmail}
+            onChange={(e) => setAlertEmail(e.target.value)}
+          />
           <div className="jobs-alert-card__checkboxes">
             <label className="jobs-filters__checkbox" style={{ margin: 0, padding: '6px 4px', gap: '6px' }}>
-              <input type="checkbox" defaultChecked />
+              <input 
+                type="checkbox" 
+                checked={alertFrequency === 'Weekly'}
+                onChange={() => setAlertFrequency('Weekly')}
+              />
               <span className="jobs-filters__checkmark" />
               <span className="jobs-filters__label">Weekly</span>
             </label>
             <label className="jobs-filters__checkbox" style={{ margin: 0, padding: '6px 4px', gap: '6px' }}>
-              <input type="checkbox" />
+              <input 
+                type="checkbox" 
+                checked={alertFrequency === 'Monthly'}
+                onChange={() => setAlertFrequency('Monthly')}
+              />
               <span className="jobs-filters__checkmark" />
               <span className="jobs-filters__label">Monthly</span>
             </label>
           </div>
-          <button type="button" className="jobs-alert-card__btn">CREATE ALERT</button>
+          {alertMessage && (
+            <div style={{ fontSize: '0.85rem', color: alertMessage.includes('success') ? 'green' : '#ff4444', marginBottom: '8px' }}>
+              {alertMessage}
+            </div>
+          )}
+          <button type="button" className="jobs-alert-card__btn" onClick={handleCreateAlert}>CREATE ALERT</button>
         </div>
       </div>
     </div>

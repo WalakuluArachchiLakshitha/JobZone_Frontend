@@ -31,6 +31,11 @@ export default function Companies() {
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Dynamic filter counts
+  const [filterCounts, setFilterCounts] = useState({ locations: [], industries: [], sizes: [] });
+  const [showAllLocations, setShowAllLocations] = useState(false);
+  const [showAllSectors, setShowAllSectors] = useState(false);
+
   useEffect(() => {
     localStorage.setItem('jobzoneFollowedCompanies', JSON.stringify(followed));
   }, [followed]);
@@ -44,49 +49,6 @@ export default function Companies() {
       setFollowed([...followed, companyId]);
     }
   };
-
-  // Sidebar Mock Counts (matching screenshot styling)
-  const locationOptions = [
-    { name: 'Foreign Jobs', count: 3 },
-    { name: 'Australia', count: 3 },
-    { name: 'Australia City', count: 3 },
-    { name: 'Canada', count: 3 },
-    { name: 'Dubai', count: 3 }
-  ];
-
-  const dateOptions = [
-    { label: 'Last Hour', count: 3 },
-    { label: 'Last 24 hours', count: 3 },
-    { label: 'Last week', count: 3 },
-    { label: 'Last 2 weeks', count: 5 },
-    { label: 'Last month', count: 10 },
-    { label: 'All', count: 116 }
-  ];
-
-  const sectorOptions = [
-    { name: 'Accounting & Finance', count: 1 },
-    { name: 'Administration & Office Support', count: 2 },
-    { name: 'Agriculture, Farming', count: 18 },
-    { name: 'Apparel, Garments & Textile', count: 1 },
-    { name: 'Architecture, Construction & Property', count: 2 }
-  ];
-
-  const teamSizeOptions = [
-    { name: '1-100 Members', count: 19 },
-    { name: '101-200 Members', count: 3 },
-    { name: '201-300 Members', count: 3 },
-    { name: '301-400 Members', count: 3 },
-    { name: '401-500 Members', count: 3 }
-  ];
-
-  const uniqueSectors = [
-    'Accounting & Finance',
-    'Administration & Office Support',
-    'Agriculture, Farming',
-    'Apparel, Garments & Textile',
-    'Architecture, Construction & Property',
-    'Information Technology'
-  ];
 
   // Fetch companies from API
   useEffect(() => {
@@ -125,6 +87,9 @@ export default function Companies() {
           setCompaniesList(res.companies || []);
           setTotalCompanies(res.total || 0);
           setTotalPages(res.totalPages || 1);
+          if (res.counts) {
+            setFilterCounts(res.counts);
+          }
         }
       } catch (err) {
         console.error('Failed to load companies:', err);
@@ -269,7 +234,7 @@ export default function Companies() {
               <div className="companies-filters__section">
                 <h4 className="companies-filters__section-title">Locations</h4>
                 <div className="companies-filters__options">
-                  {locationOptions.map((opt) => (
+                  {filterCounts.locations.slice(0, showAllLocations ? undefined : 5).map((opt) => (
                     <label key={opt.name} className="companies-filters__checkbox">
                       <input 
                         type="checkbox"
@@ -281,7 +246,15 @@ export default function Companies() {
                       <span className="companies-filters__count">{opt.count}</span>
                     </label>
                   ))}
-                  <button className="companies-filters__see-more">+ see more</button>
+                  {filterCounts.locations.length > 5 && (
+                    <button 
+                      type="button"
+                      className="companies-filters__see-more" 
+                      onClick={() => setShowAllLocations(!showAllLocations)}
+                    >
+                      {showAllLocations ? '- see less' : '+ see more'}
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -289,7 +262,14 @@ export default function Companies() {
               <div className="companies-filters__section">
                 <h4 className="companies-filters__section-title">Date Posted</h4>
                 <div className="companies-filters__options">
-                  {dateOptions.map((opt) => (
+                  {[
+                    { label: 'Last Hour' },
+                    { label: 'Last 24 hours' },
+                    { label: 'Last week' },
+                    { label: 'Last 2 weeks' },
+                    { label: 'Last month' },
+                    { label: 'All' }
+                  ].map((opt) => (
                     <label key={opt.label} className="companies-filters__checkbox">
                       <input 
                         type="radio" 
@@ -299,7 +279,6 @@ export default function Companies() {
                       />
                       <span className="companies-filters__checkmark" style={{ borderRadius: '50%' }}></span>
                       <span className="companies-filters__label">{opt.label}</span>
-                      <span className="companies-filters__count">{opt.count}</span>
                     </label>
                   ))}
                 </div>
@@ -309,7 +288,7 @@ export default function Companies() {
               <div className="companies-filters__section">
                 <h4 className="companies-filters__section-title">Sector</h4>
                 <div className="companies-filters__options">
-                  {sectorOptions.map((opt) => (
+                  {filterCounts.industries.slice(0, showAllSectors ? undefined : 5).map((opt) => (
                     <label key={opt.name} className="companies-filters__checkbox">
                       <input 
                         type="checkbox"
@@ -321,7 +300,15 @@ export default function Companies() {
                       <span className="companies-filters__count">{opt.count}</span>
                     </label>
                   ))}
-                  <button className="companies-filters__see-more">+ see more</button>
+                  {filterCounts.industries.length > 5 && (
+                    <button 
+                      type="button"
+                      className="companies-filters__see-more"
+                      onClick={() => setShowAllSectors(!showAllSectors)}
+                    >
+                      {showAllSectors ? '- see less' : '+ see more'}
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -329,7 +316,7 @@ export default function Companies() {
               <div className="companies-filters__section">
                 <h4 className="companies-filters__section-title">Team Size</h4>
                 <div className="companies-filters__options">
-                  {teamSizeOptions.map((opt) => (
+                  {filterCounts.sizes.map((opt) => (
                     <label key={opt.name} className="companies-filters__checkbox">
                       <input 
                         type="checkbox"
