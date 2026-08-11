@@ -343,13 +343,14 @@ export default function PostVacancy() {
                         required
                       >
                         <option value="">Job Category *</option>
-                        <option value="Technology">Technology</option>
-                        <option value="Design">Design</option>
-                        <option value="Marketing">Marketing</option>
-                        <option value="Finance">Finance</option>
-                        <option value="Healthcare">Healthcare</option>
-                        <option value="Sales">Sales</option>
-                        <option value="Engineering">Engineering</option>
+                        <option value="Accounting & Finance">Accounting & Finance</option>
+                        <option value="Administration & Office Support">Administration & Office Support</option>
+                        <option value="Agriculture, Farming">Agriculture, Farming</option>
+                        <option value="Apparel, Garments & Textile">Apparel, Garments & Textile</option>
+                        <option value="Architecture, Construction & Property">Architecture, Construction & Property</option>
+                        <option value="Engineering & Technical">Engineering & Technical</option>
+                        <option value="Hospitality, Travel & Tourism">Hospitality, Travel & Tourism</option>
+                        <option value="Marketing, Sales & Business Development">Marketing, Sales & Business Development</option>
                       </select>
                     </div>
 

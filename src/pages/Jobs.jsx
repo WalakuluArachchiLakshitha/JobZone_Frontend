@@ -24,12 +24,12 @@ export default function Jobs() {
   // Search state
   const [searchTitle, setSearchTitle] = useState(searchParams.get('search') || '');
   const [searchLocation, setSearchLocation] = useState(searchParams.get('location') || '');
-  const [searchSector, setSearchSector] = useState('');
+  const [searchSector, setSearchSector] = useState(searchParams.get('category') || '');
 
   // Active search terms (applied on search click)
   const [activeSearch, setActiveSearch] = useState(searchParams.get('search') || '');
   const [activeLocation, setActiveLocation] = useState(searchParams.get('location') || '');
-  const [activeSector, setActiveSector] = useState('');
+  const [activeSector, setActiveSector] = useState(searchParams.get('category') || '');
 
   // Filter state
   const [selectedTypes, setSelectedTypes] = useState(() => {
@@ -269,10 +269,13 @@ export default function Jobs() {
             {[
               'All',
               'Accounting & Finance',
-              'Administrative & Office Support',
+              'Administration & Office Support',
               'Agriculture, Farming',
               'Apparel, Garments & Textile',
-              'Architecture, Construction & Property'
+              'Architecture, Construction & Property',
+              'Engineering & Technical',
+              'Hospitality, Travel & Tourism',
+              'Marketing, Sales & Business Development'
             ].map((sec) => (
               <label key={sec} className="jobs-filters__checkbox" htmlFor={`filter-sec-${sec}`}>
                 <input
@@ -504,12 +507,13 @@ export default function Jobs() {
               >
                 <option value="">Select Sector</option>
                 <option value="Accounting & Finance">Accounting & Finance</option>
-                <option value="Administrative & Office Support">Administrative & Office Support</option>
+                <option value="Administration & Office Support">Administration & Office Support</option>
                 <option value="Agriculture, Farming">Agriculture, Farming</option>
                 <option value="Apparel, Garments & Textile">Apparel, Garments & Textile</option>
                 <option value="Architecture, Construction & Property">Architecture, Construction & Property</option>
-                <option value="Healthcare & Medical">Healthcare & Medical</option>
-                <option value="Information Technology">Information Technology (IT) & Software</option>
+                <option value="Engineering & Technical">Engineering & Technical</option>
+                <option value="Hospitality, Travel & Tourism">Hospitality, Travel & Tourism</option>
+                <option value="Marketing, Sales & Business Development">Marketing, Sales & Business Development</option>
               </select>
               <ChevronDown size={14} className="jobs-search__select-chevron" />
             </div>
