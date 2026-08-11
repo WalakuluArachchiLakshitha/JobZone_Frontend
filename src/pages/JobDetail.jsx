@@ -140,6 +140,14 @@ export default function JobDetail() {
     }
   };
 
+  const handleEmailJobClick = () => {
+    const to = 'jobzone@gmail.com';
+    const subject = `Inquiry about ${job.title}`;
+    const body = `Hello,%0A%0AI am interested in the position \"${job.title}\" at ${companyName}.%0AJob ID: ${job.id || job._id || ''}%0A%0ARegards,%0A`;
+    const gmailUrl = `https://mail.google.com/mail/u/0/?view=cm&fs=1&to=${encodeURIComponent(to)}&su=${encodeURIComponent(subject)}&body=${body}`;
+    window.open(gmailUrl, '_blank', 'noopener,noreferrer');
+  };
+
   const triggerToast = (message) => {
     setToastMessage(message);
     setShowToast(true);
@@ -214,7 +222,14 @@ export default function JobDetail() {
                   <MapPin size={16} className="location-icon" />
                   <span>{job.location}</span>
                 </div>
-                <a href="#job-map-section" className="view-map-btn">View on Map</a>
+                <a
+                  href="https://www.google.com/maps/@6.912208,79.9904201,21373m/data=!3m1!1e3!5m1!1e2?entry=ttu&g_ep=EgoyMDI2MDgwNS4xIKXMDSoASAFQAw%3D%3D"
+                  className="view-map-btn"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  View on Map
+                </a>
               </div>
 
               <div className="job-meta-details-row">
@@ -246,7 +261,7 @@ export default function JobDetail() {
                   {isSaved ? 'Shortlisted' : 'Shortlist'}
                 </button>
                 <button
-                  onClick={() => triggerToast(`Job details emailed to your registered address!`)}
+                  onClick={handleEmailJobClick}
                   className="action-btn-outline"
                 >
                   <Mail size={14} />
@@ -374,7 +389,14 @@ export default function JobDetail() {
 
             {/* Map Card */}
             <div className="sidebar-map-card" id="job-map-section">
-              <img src={mataleMap} alt="Matale Map location" className="sidebar-map-image" />
+              <a
+                href="https://www.google.com/maps/@6.912208,79.9904201,21373m/data=!3m1!1e3!5m1!1e2?entry=ttu&g_ep=EgoyMDI2MDgwNS4xIKXMDSoASAFQAw%3D%3D"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Open location in Google Maps"
+              >
+                <img src={mataleMap} alt="Matale Map location" className="sidebar-map-image" />
+              </a>
               
               {/* Mock Map UI Overlays */}
               <div className="map-overlay-search">
