@@ -1405,131 +1405,268 @@ export default function Dashboard() {
                   <h2 className="dashboard-pane__title">Overview</h2>
                 </div>
 
-                {/* Stats Row */}
-                <div className="dashboard-stats-grid" id="dashboard-stats-row">
-                  <div className="dashboard-stat-card glass-card">
-                    <div className="dashboard-stat-card__icon dashboard-stat-card__icon--blue">
-                      <FileText size={22} />
-                    </div>
-                    <div className="dashboard-stat-card__content">
-                      <span className="dashboard-stat-card__label">Applied Jobs</span>
-                      <h3 className="dashboard-stat-card__value">{applications.length}</h3>
-                    </div>
-                  </div>
-
-                  <div className="dashboard-stat-card glass-card">
-                    <div className="dashboard-stat-card__icon dashboard-stat-card__icon--yellow">
-                      <Clock size={22} />
-                    </div>
-                    <div className="dashboard-stat-card__content">
-                      <span className="dashboard-stat-card__label">In Review</span>
-                      <h3 className="dashboard-stat-card__value">
-                        {applications.filter((a) => a.status === 'In Review').length}
-                      </h3>
-                    </div>
-                  </div>
-
-                  <div className="dashboard-stat-card glass-card">
-                    <div className="dashboard-stat-card__icon dashboard-stat-card__icon--green">
-                      <TrendingUp size={22} />
-                    </div>
-                    <div className="dashboard-stat-card__content">
-                      <span className="dashboard-stat-card__label">Interviews</span>
-                      <h3 className="dashboard-stat-card__value">
-                        {applications.filter((a) => a.status === 'Interview').length}
-                      </h3>
-                    </div>
-                  </div>
-
-                  <div className="dashboard-stat-card glass-card">
-                    <div className="dashboard-stat-card__icon dashboard-stat-card__icon--pink">
-                      <BookmarkCheck size={22} />
-                    </div>
-                    <div className="dashboard-stat-card__content">
-                      <span className="dashboard-stat-card__label">Saved Jobs</span>
-                      <h3 className="dashboard-stat-card__value">{savedJobsList.length}</h3>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="dashboard-pane__section glass-card" style={{ marginTop: '24px' }}>
-                  <div className="dashboard-section-header">
-                    <h3 className="dashboard-section-title">Recent Applications</h3>
-                    <button
-                      className="dashboard-section-link"
-                      onClick={() => setActiveTab('applications')}
-                    >
-                      View All
-                      <ArrowRight size={14} />
-                    </button>
-                  </div>
-
-                  <div className="dashboard-apps-list">
-                    {applications.slice(0, 3).map((app) => (
-                      <div key={app._id || app.id} className="dashboard-app-item">
-                        <div className="dashboard-app-item__logo">
-                          <img src={app.job.company.logo} alt={app.job.company.name} />
+                {role === 'employer' ? (
+                  <>
+                    <div className="dashboard-stats-grid" id="dashboard-stats-row">
+                      <div className="dashboard-stat-card glass-card">
+                        <div className="dashboard-stat-card__icon dashboard-stat-card__icon--blue">
+                          <Briefcase size={22} />
                         </div>
-                        <div className="dashboard-app-item__info">
-                          <h4>{app.job.title}</h4>
-                          <p>{app.job.company.name}</p>
+                        <div className="dashboard-stat-card__content">
+                          <span className="dashboard-stat-card__label">Posted Jobs</span>
+                          <h3 className="dashboard-stat-card__value">{employerJobs.length}</h3>
                         </div>
-                        <div className="dashboard-app-item__date">
-                          <span>Applied on</span>
-                          <strong>{app.appliedDate}</strong>
+                      </div>
+
+                      <div className="dashboard-stat-card glass-card">
+                        <div className="dashboard-stat-card__icon dashboard-stat-card__icon--green">
+                          <CheckCircle size={22} />
                         </div>
-                        <div className="dashboard-app-item__status">
-                          {getStatusBadge(app.status)}
+                        <div className="dashboard-stat-card__content">
+                          <span className="dashboard-stat-card__label">Active Jobs</span>
+                          <h3 className="dashboard-stat-card__value">
+                            {employerJobs.filter(j => j.status !== 'closed').length}
+                          </h3>
                         </div>
-                        <Link
-                          to={`/jobs/${app.job.id}`}
-                          className="dashboard-app-item__action"
-                          aria-label="View job details"
+                      </div>
+                      
+                      <div className="dashboard-stat-card glass-card">
+                        <div className="dashboard-stat-card__icon dashboard-stat-card__icon--yellow">
+                          <TrendingUp size={22} />
+                        </div>
+                        <div className="dashboard-stat-card__content">
+                          <span className="dashboard-stat-card__label">Total Views</span>
+                          <h3 className="dashboard-stat-card__value">
+                            {employerJobs.reduce((acc, job) => acc + (job.views || 0), 0)}
+                          </h3>
+                        </div>
+                      </div>
+                      
+                      <div className="dashboard-stat-card glass-card">
+                        <div className="dashboard-stat-card__icon dashboard-stat-card__icon--pink">
+                          <FileText size={22} />
+                        </div>
+                        <div className="dashboard-stat-card__content">
+                          <span className="dashboard-stat-card__label">Closed Jobs</span>
+                          <h3 className="dashboard-stat-card__value">
+                            {employerJobs.filter(j => j.status === 'closed').length}
+                          </h3>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="dashboard-pane__section glass-card" style={{ marginTop: '24px' }}>
+                      <div className="dashboard-section-header">
+                        <h3 className="dashboard-section-title">Recent Postings</h3>
+                        <button
+                          className="dashboard-section-link"
+                          onClick={() => setActiveTab('my-jobs')}
                         >
-                          <Eye size={16} />
+                          View All
+                          <ArrowRight size={14} />
+                        </button>
+                      </div>
+
+                      <div className="dashboard-apps-list">
+                        {employerJobs.slice(0, 3).map((job) => (
+                          <div key={job._id || job.id} className="dashboard-app-item">
+                            <div className="dashboard-app-item__logo" style={{ background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <Briefcase size={24} color="#0284c7" />
+                            </div>
+                            <div className="dashboard-app-item__info">
+                              <h4>{job.title}</h4>
+                              <p>{job.type || 'Full Time'} • {job.location}</p>
+                            </div>
+                            <div className="dashboard-app-item__date">
+                              <span>Posted on</span>
+                              <strong>{new Date(job.createdAt).toLocaleDateString()}</strong>
+                            </div>
+                            <div className="dashboard-app-item__status">
+                              <span className={`status-badge status-badge--${(job.status || 'open').toLowerCase()}`}>
+                                {job.status || 'Open'}
+                              </span>
+                            </div>
+                            <Link
+                              to={`/jobs/${job._id || job.id}`}
+                              className="dashboard-app-item__action"
+                              aria-label="View job details"
+                            >
+                              <Eye size={16} />
+                            </Link>
+                          </div>
+                        ))}
+                        {employerJobs.length === 0 && (
+                          <p style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>No recent job postings found.</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="dashboard-quick-actions">
+                      <h3 className="dashboard-quick-actions__title">Quick Actions</h3>
+                      <div className="dashboard-quick-actions__grid">
+                        <Link to="/post-vacancy" className="quick-action-card glass-card">
+                          <div className="quick-action-card__icon">
+                            <Briefcase size={20} />
+                          </div>
+                          <h4>Post a Job</h4>
+                          <p>Find your next great hire</p>
                         </Link>
-                      </div>
-                    ))}
-                  </div>
-                </div>
 
-                <div className="dashboard-quick-actions">
-                  <h3 className="dashboard-quick-actions__title">Quick Actions</h3>
-                  <div className="dashboard-quick-actions__grid">
-                    <Link to="/jobs" className="quick-action-card glass-card">
-                      <div className="quick-action-card__icon">
-                        <Briefcase size={20} />
-                      </div>
-                      <h4>Search Jobs</h4>
-                      <p>Explore thousands of open opportunities</p>
-                    </Link>
+                        <button
+                          onClick={() => {
+                            setActiveTab('profile');
+                            setIsEditing(true);
+                          }}
+                          className="quick-action-card glass-card text-left btn-clear"
+                        >
+                          <div className="quick-action-card__icon">
+                            <Edit3 size={20} />
+                          </div>
+                          <h4>Update Profile</h4>
+                          <p>Keep your details and resume fresh</p>
+                        </button>
 
-                    <button
-                      onClick={() => {
-                        setActiveTab('profile');
-                        setIsEditing(true);
-                      }}
-                      className="quick-action-card glass-card text-left btn-clear"
-                    >
-                      <div className="quick-action-card__icon">
-                        <Edit3 size={20} />
+                        <button
+                          onClick={() => setActiveTab('my-jobs')}
+                          className="quick-action-card glass-card text-left btn-clear"
+                        >
+                          <div className="quick-action-card__icon">
+                            <BookmarkCheck size={20} />
+                          </div>
+                          <h4>Manage Postings</h4>
+                          <p>Edit or close existing jobs</p>
+                        </button>
                       </div>
-                      <h4>Update Profile</h4>
-                      <p>Keep your details and resume fresh</p>
-                    </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="dashboard-stats-grid" id="dashboard-stats-row">
+                      <div className="dashboard-stat-card glass-card">
+                        <div className="dashboard-stat-card__icon dashboard-stat-card__icon--blue">
+                          <FileText size={22} />
+                        </div>
+                        <div className="dashboard-stat-card__content">
+                          <span className="dashboard-stat-card__label">Applied Jobs</span>
+                          <h3 className="dashboard-stat-card__value">{applications.length}</h3>
+                        </div>
+                      </div>
 
-                    <button
-                      onClick={() => setActiveTab('saved')}
-                      className="quick-action-card glass-card text-left btn-clear"
-                    >
-                      <div className="quick-action-card__icon">
-                        <BookmarkCheck size={20} />
+                      <div className="dashboard-stat-card glass-card">
+                        <div className="dashboard-stat-card__icon dashboard-stat-card__icon--yellow">
+                          <Clock size={22} />
+                        </div>
+                        <div className="dashboard-stat-card__content">
+                          <span className="dashboard-stat-card__label">In Review</span>
+                          <h3 className="dashboard-stat-card__value">
+                            {applications.filter((a) => a.status === 'In Review').length}
+                          </h3>
+                        </div>
                       </div>
-                      <h4>View Saved</h4>
-                      <p>Check jobs you have bookmarked</p>
-                    </button>
-                  </div>
-                </div>
+
+                      <div className="dashboard-stat-card glass-card">
+                        <div className="dashboard-stat-card__icon dashboard-stat-card__icon--green">
+                          <TrendingUp size={22} />
+                        </div>
+                        <div className="dashboard-stat-card__content">
+                          <span className="dashboard-stat-card__label">Interviews</span>
+                          <h3 className="dashboard-stat-card__value">
+                            {applications.filter((a) => a.status === 'Interview').length}
+                          </h3>
+                        </div>
+                      </div>
+
+                      <div className="dashboard-stat-card glass-card">
+                        <div className="dashboard-stat-card__icon dashboard-stat-card__icon--pink">
+                          <BookmarkCheck size={22} />
+                        </div>
+                        <div className="dashboard-stat-card__content">
+                          <span className="dashboard-stat-card__label">Saved Jobs</span>
+                          <h3 className="dashboard-stat-card__value">{savedJobsList.length}</h3>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="dashboard-pane__section glass-card" style={{ marginTop: '24px' }}>
+                      <div className="dashboard-section-header">
+                        <h3 className="dashboard-section-title">Recent Applications</h3>
+                        <button
+                          className="dashboard-section-link"
+                          onClick={() => setActiveTab('applications')}
+                        >
+                          View All
+                          <ArrowRight size={14} />
+                        </button>
+                      </div>
+
+                      <div className="dashboard-apps-list">
+                        {applications.slice(0, 3).map((app) => (
+                          <div key={app._id || app.id} className="dashboard-app-item">
+                            <div className="dashboard-app-item__logo">
+                              <img src={app.job?.company?.logo || 'https://via.placeholder.com/50'} alt={app.job?.company?.name || 'Company'} />
+                            </div>
+                            <div className="dashboard-app-item__info">
+                              <h4>{app.job?.title}</h4>
+                              <p>{app.job?.company?.name}</p>
+                            </div>
+                            <div className="dashboard-app-item__date">
+                              <span>Applied on</span>
+                              <strong>{app.appliedDate}</strong>
+                            </div>
+                            <div className="dashboard-app-item__status">
+                              {getStatusBadge(app.status)}
+                            </div>
+                            <Link
+                              to={app.job ? `/jobs/${app.job.id}` : '#'}
+                              className="dashboard-app-item__action"
+                              aria-label="View job details"
+                            >
+                              <Eye size={16} />
+                            </Link>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="dashboard-quick-actions">
+                      <h3 className="dashboard-quick-actions__title">Quick Actions</h3>
+                      <div className="dashboard-quick-actions__grid">
+                        <Link to="/jobs" className="quick-action-card glass-card">
+                          <div className="quick-action-card__icon">
+                            <Briefcase size={20} />
+                          </div>
+                          <h4>Search Jobs</h4>
+                          <p>Explore thousands of open opportunities</p>
+                        </Link>
+
+                        <button
+                          onClick={() => {
+                            setActiveTab('profile');
+                            setIsEditing(true);
+                          }}
+                          className="quick-action-card glass-card text-left btn-clear"
+                        >
+                          <div className="quick-action-card__icon">
+                            <Edit3 size={20} />
+                          </div>
+                          <h4>Update Profile</h4>
+                          <p>Keep your details and resume fresh</p>
+                        </button>
+
+                        <button
+                          onClick={() => setActiveTab('saved')}
+                          className="quick-action-card glass-card text-left btn-clear"
+                        >
+                          <div className="quick-action-card__icon">
+                            <BookmarkCheck size={20} />
+                          </div>
+                          <h4>View Saved</h4>
+                          <p>Check jobs you have bookmarked</p>
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             )}
 
