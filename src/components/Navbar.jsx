@@ -27,7 +27,9 @@ export default function Navbar() {
   const getAvatarUrl = (avatarPath) => {
     if (!avatarPath) return "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&h=150&q=80";
     if (avatarPath.startsWith('http')) return avatarPath;
-    return `http://localhost:5000${avatarPath}`;
+    const serverOrigin = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/, '');
+    const cleanPath = avatarPath.startsWith('/') ? avatarPath : `/${avatarPath}`;
+    return `${serverOrigin}${cleanPath}`;
   };
 
   const avatar = getAvatarUrl(user?.avatar);
@@ -50,15 +52,24 @@ export default function Navbar() {
     setShowUserMenu(false);
   };
 
+  // 'roles' = which logged-in roles see this link.
+  // undefined means visible to everyone (logged-in & logged-out, all roles).
   const navLinks = [
     { to: '/', label: 'Home' },
     { to: '/jobs', label: 'Jobs' },
     { to: '/candidates', label: 'Candidates' },
-    { to: '/post-vacancy', label: 'Post your Vacancy' },
-    { to: '/dashboard?tab=resume', label: 'Create My CV' },
+    // Only employers see "Post your Vacancy" when logged in
+    { to: '/post-vacancy', label: 'Post your Vacancy', roles: ['employer'] },
+    // Only candidates see "Create My CV" when logged in
+    { to: '/dashboard?tab=resume', label: 'Create My CV', roles: ['candidate'] },
     { to: '/about', label: 'About us' },
     { to: '/contact', label: 'Contact us' },
   ];
+
+  // When logged in, filter by role; when logged out, show all links
+  const visibleNavLinks = isLoggedIn
+    ? navLinks.filter(link => !link.roles || link.roles.includes(role))
+    : navLinks;
 
   return (
     <nav className={`navbar ${isScrolled ? 'navbar--scrolled' : ''} ${isLoggedIn ? 'navbar--logged-in' : ''}`} id="main-navbar">
@@ -74,7 +85,7 @@ export default function Navbar() {
               </Link>
 
               <div className="navbar__logged-in-links">
-                {navLinks.map((link) => (
+                {visibleNavLinks.map((link) => (
                   <Link
                     key={link.label}
                     to={link.to}
@@ -155,7 +166,7 @@ export default function Navbar() {
             {/* Mobile Drawer Navigation Links */}
             <div className={`navbar__bottom-row ${isMobileMenuOpen ? 'navbar__bottom-row--open' : ''}`}>
               <div className="navbar__links">
-                {navLinks.map((link) => (
+                {visibleNavLinks.map((link) => (
                   <Link
                     key={link.label}
                     to={link.to}
@@ -221,7 +232,7 @@ export default function Navbar() {
             {/* Bottom Row: Navigation Links */}
             <div className={`navbar__bottom-row ${isMobileMenuOpen ? 'navbar__bottom-row--open' : ''}`}>
               <div className="navbar__links">
-                {navLinks.map((link) => (
+                {visibleNavLinks.map((link) => (
                   <Link
                     key={link.label}
                     to={link.to}

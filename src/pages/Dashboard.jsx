@@ -37,7 +37,7 @@ import './Dashboard.css';
 export default function Dashboard() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout, role, refreshUser } = useAuth();
+  const { user, logout, role, refreshUser, updateUser } = useAuth();
 
   const [activeTab, setActiveTab] = useState('overview');
   const [profile, setProfile] = useState(user || {});
@@ -60,7 +60,9 @@ export default function Dashboard() {
   const getAvatarUrl = (avatarPath) => {
     if (!avatarPath) return "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&h=150&q=80";
     if (avatarPath.startsWith('http')) return avatarPath;
-    return `http://localhost:5000${avatarPath}`;
+    const serverOrigin = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/, '');
+    const cleanPath = avatarPath.startsWith('/') ? avatarPath : `/${avatarPath}`;
+    return `${serverOrigin}${cleanPath}`;
   };
 
   const userAvatar = getAvatarUrl(profile.avatar);
@@ -153,8 +155,15 @@ export default function Dashboard() {
       formData.append('avatar', file);
       try {
         const res = await userApi.uploadAvatar(formData);
-        if (res.success) {
-          await refreshUser();
+        if (res.success && res.avatarUrl) {
+          const newAvatar = res.avatarUrl;
+          setProfile((prev) => ({ ...prev, avatar: newAvatar }));
+          setEditForm((prev) => ({ ...prev, avatar: newAvatar }));
+          if (res.user) {
+            updateUser(res.user);
+          } else {
+            await refreshUser();
+          }
         }
       } catch (err) {
         alert(err.message || 'Failed to upload avatar');
@@ -408,16 +417,24 @@ export default function Dashboard() {
       experience: '',
       education: '',
       bio: '',
-      avatar: ''
+      avatar: profile.avatar || ''
     });
   };
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await userApi.updateProfile(editForm);
+      const payload = {
+        ...editForm,
+        avatar: editForm.avatar || profile.avatar || ''
+      };
+      const res = await userApi.updateProfile(payload);
       if (res.success) {
-        await refreshUser();
+        if (res.user) {
+          updateUser(res.user);
+        } else {
+          await refreshUser();
+        }
         setIsEditing(false);
       }
     } catch (err) {
@@ -1168,7 +1185,15 @@ export default function Dashboard() {
                           strokeLinecap="round" transform="rotate(-90 60 60)" />
                 </svg>
                 <div className="profile-progress-avatar-wrap">
-                  <img src={userAvatar} alt="Avatar" className="profile-progress-avatar" />
+                  <img 
+                    src={userAvatar} 
+                    alt="Avatar" 
+                    className="profile-progress-avatar" 
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&h=150&q=80";
+                    }}
+                  />
                 </div>
               </div>
               <div className="profile-progress-percent">{completenessScore}%</div>

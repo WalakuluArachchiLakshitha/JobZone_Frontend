@@ -152,15 +152,20 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const updateUser = (userData) => {
+    if (!userData) return null;
+    const normalizedUser = normalizeUserData(userData);
+    setUser(normalizedUser);
+    localStorage.setItem('jobzone_user', JSON.stringify(normalizedUser));
+    localStorage.setItem('jobzoneUserRole', normalizedUser.role);
+    return normalizedUser;
+  };
+
   const refreshUser = async () => {
     try {
       const response = await userApi.getProfile();
       if (response.success && response.user) {
-        const normalizedUser = normalizeUserData(response.user);
-        setUser(normalizedUser);
-        localStorage.setItem('jobzone_user', JSON.stringify(normalizedUser));
-        localStorage.setItem('jobzoneUserRole', normalizedUser.role);
-        return normalizedUser;
+        return updateUser(response.user);
       }
     } catch (error) {
       console.error('Failed to refresh user profile:', error);
@@ -178,6 +183,7 @@ export function AuthProvider({ children }) {
     logout,
     googleLogin,
     refreshUser,
+    updateUser,
     role: normalizeRole(user?.role || user?.userType || user?.accountType || user?.type || user?.userRole || localStorage.getItem('jobzoneUserRole') || 'candidate')
   };
 
