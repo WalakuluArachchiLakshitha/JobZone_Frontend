@@ -7,6 +7,7 @@ import './Navbar.css';
 const allUserMenuItems = [
   { to: '/dashboard?tab=overview', label: 'Dashboard', icon: LayoutGrid, id: 'nav-dropdown-overview', roles: ['candidate', 'employer'] },
   { to: '/dashboard?tab=profile', label: 'My Profile', icon: User, id: 'nav-dropdown-profile', roles: ['candidate', 'employer'] },
+  { to: '/dashboard?tab=my-jobs', label: 'My Jobs', icon: Briefcase, id: 'nav-dropdown-my-jobs', roles: ['employer'] },
   { to: '/dashboard?tab=resume', label: 'My Resume', icon: FileText, id: 'nav-dropdown-resume', roles: ['candidate'] },
   { to: '/dashboard?tab=applications', label: 'Applied Jobs', icon: Briefcase, id: 'nav-dropdown-applications', roles: ['candidate'] },
   { to: '/dashboard?tab=cv-manager', label: 'CV Manager', icon: Folder, id: 'nav-dropdown-cv-manager', roles: ['candidate'] },
