@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Bell, LayoutGrid, User, FileText, Briefcase, Folder, Heart, Lock, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import NotificationDropdown from './NotificationDropdown';
 import './Navbar.css';
 
 const allUserMenuItems = [
@@ -100,11 +101,8 @@ export default function Navbar() {
               </div>
 
               <div className="navbar__logged-in-actions">
-                {/* Notifications Bell */}
-                <Link to="/dashboard" className="navbar__bell-btn" id="nav-bell" aria-label="Notifications">
-                  <Bell size={20} />
-                  <span className="navbar__bell-badge">0</span>
-                </Link>
+                {/* Notifications Bell Dropdown Component */}
+                <NotificationDropdown />
 
                 <div className="navbar__user-wrapper">
                   <button
@@ -202,11 +200,8 @@ export default function Navbar() {
               </Link>
 
               <div className="navbar__top-actions">
-                {/* Notifications Bell */}
-                <Link to="/dashboard" className="navbar__bell-btn" id="nav-bell" aria-label="Notifications">
-                  <Bell size={20} />
-                  <span className="navbar__bell-badge">0</span>
-                </Link>
+                {/* Notifications Bell Dropdown */}
+                <NotificationDropdown />
 
                 <span className="navbar__divider">|</span>
                 <Link to="/register" className="navbar__auth-link" id="nav-register">
