@@ -58,7 +58,7 @@ export default function Navbar() {
   const navLinks = [
     { to: '/', label: 'Home' },
     { to: '/jobs', label: 'Jobs' },
-    { to: '/candidates', label: 'Candidates', roles: ['employer'] },
+    { to: '/candidates', label: 'Applied Candidates', roles: ['employer'] },
     // Only employers see "Post your Vacancy" when logged in
     { to: '/post-vacancy', label: 'Post your Vacancy', roles: ['employer'] },
     // Only candidates see "Create My CV" when logged in
@@ -90,9 +90,8 @@ export default function Navbar() {
                   <Link
                     key={link.label}
                     to={link.to}
-                    className={`navbar__link ${
-                      location.pathname === link.to.split('#')[0] ? 'navbar__link--active' : ''
-                    }`}
+                    className={`navbar__link ${location.pathname === link.to.split('#')[0] ? 'navbar__link--active' : ''
+                      }`}
                     id={`nav-link-${link.label.toLowerCase().replace(/\s/g, '-')}`}
                   >
                     {link.label}
@@ -171,9 +170,8 @@ export default function Navbar() {
                   <Link
                     key={link.label}
                     to={link.to}
-                    className={`navbar__link ${
-                      location.pathname === link.to.split('#')[0] ? 'navbar__link--active' : ''
-                    }`}
+                    className={`navbar__link ${location.pathname === link.to.split('#')[0] ? 'navbar__link--active' : ''
+                      }`}
                     id={`nav-link-mobile-${link.label.toLowerCase().replace(/\s/g, '-')}`}
                   >
                     {link.label}
@@ -237,9 +235,8 @@ export default function Navbar() {
                   <Link
                     key={link.label}
                     to={link.to}
-                    className={`navbar__link ${
-                      location.pathname === link.to.split('#')[0] ? 'navbar__link--active' : ''
-                    }`}
+                    className={`navbar__link ${location.pathname === link.to.split('#')[0] ? 'navbar__link--active' : ''
+                      }`}
                     id={`nav-link-${link.label.toLowerCase().replace(/\s/g, '-')}`}
                   >
                     {link.label}
