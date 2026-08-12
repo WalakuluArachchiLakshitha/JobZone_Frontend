@@ -3,7 +3,7 @@ import {
   FileText, 
   Contact, 
   Briefcase, 
-  MessageCircle,
+
   Monitor,
   Headphones,
   Clock

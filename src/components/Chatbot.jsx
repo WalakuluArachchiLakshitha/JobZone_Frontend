@@ -46,7 +46,7 @@ export default function Chatbot() {
         jobs: res.jobs || [],
       };
       setMessages((prev) => [...prev, botMsg]);
-    } catch (err) {
+    } catch {
       setMessages((prev) => [
         ...prev,
         { role: 'bot', text: '😔 Sorry, something went wrong. Please try again.', suggestions: ['Show latest jobs', 'How to apply?'] },

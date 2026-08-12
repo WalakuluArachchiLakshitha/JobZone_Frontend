@@ -26,7 +26,7 @@ async function request(endpoint, options = {}) {
   if (text) {
     try {
       data = JSON.parse(text);
-    } catch (e) {
+    } catch {
       data = text;
     }
   }

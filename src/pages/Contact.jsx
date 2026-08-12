@@ -5,7 +5,7 @@ import {
   Mail, 
   Phone, 
   User, 
-  MessageCircle,
+
   CheckCircle2
 } from 'lucide-react';
 import { contactApi } from '../api/contactApi';

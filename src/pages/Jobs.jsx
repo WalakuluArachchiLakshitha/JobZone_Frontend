@@ -20,7 +20,7 @@ import './Jobs.css';
 const JOBS_PER_PAGE = 15; // Set to 15 per page to match FIGMA density
 
 export default function Jobs() {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
 
   // Search state
   const [searchTitle, setSearchTitle] = useState(searchParams.get('search') || '');
@@ -158,6 +158,7 @@ export default function Jobs() {
     };
 
     fetchJobs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeSearch, activeLocation, activeSector, selectedLocationFilter, selectedSectorFilter, selectedTypes, selectedGenderFilter, selectedSalaryFilter, selectedDatePostedFilter, sortBy, currentPage]);
 
   const toggleSection = (section) => {
@@ -241,7 +242,7 @@ export default function Jobs() {
       } else {
         setAlertMessage(res.message || 'Failed to create alert');
       }
-    } catch (err) {
+    } catch {
       setAlertMessage('Error creating alert');
     }
     setTimeout(() => setAlertMessage(''), 3000);

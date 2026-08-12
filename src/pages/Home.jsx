@@ -6,7 +6,7 @@ import {
   Mail,
   FileText,
   MessageSquare,
-  ChevronRight,
+
   FolderOpen
 } from 'lucide-react';
 import { jobsApi } from '../api/jobsApi';

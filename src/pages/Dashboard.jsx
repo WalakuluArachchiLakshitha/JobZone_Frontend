@@ -6,7 +6,6 @@ import {
   Mail,
   Phone,
   Briefcase,
-  Calendar,
   BookmarkCheck,
   FileText,
   Clock,
@@ -18,10 +17,8 @@ import {
   Edit3,
   TrendingUp,
   Award,
-  LogOut,
   Save,
   X,
-  Lock,
   Globe,
   RotateCcw
 } from 'lucide-react';
@@ -83,6 +80,7 @@ export default function Dashboard() {
   // Sync state with auth context user
   useEffect(() => {
     if (user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setProfile(user);
       setEditForm(user);
     }
@@ -276,6 +274,7 @@ export default function Dashboard() {
     const params = new URLSearchParams(location.search);
     const tab = params.get('tab');
     if (tab) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveTab(tab);
     }
   }, [location]);
@@ -372,7 +371,7 @@ export default function Dashboard() {
         formattedDeadline = d.toISOString().split('T')[0];
       } else {
         // Handle DD/MM/YYYY or DD-MM-YYYY formats just in case
-        const parts = job.deadline.split(/[\/\-]/);
+        const parts = job.deadline.split(/[/\\-]/);
         if (parts.length === 3) {
           // Check if format is likely DD/MM/YYYY
           if (parts[0].length === 2 && parts[2].length === 4) {
@@ -577,6 +576,7 @@ export default function Dashboard() {
     setReferenceList(referenceList.filter((_, i) => i !== idx));
   };
 
+  // eslint-disable-next-line no-unused-vars
   const handleDownloadPDF = () => {
     const printWindow = window.open('', '_blank');
     

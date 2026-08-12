@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
   MapPin,
@@ -30,7 +30,7 @@ import './JobDetail.css';
 
 export default function JobDetail() {
   const { id } = useParams();
-  const { role, isAuthenticated, user } = useAuth();
+  const { role, user } = useAuth();
   const [job, setJob] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
@@ -50,6 +50,7 @@ export default function JobDetail() {
 
   useEffect(() => {
     if (user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setContactForm(prev => ({
         ...prev,
         senderName: user.name || '',

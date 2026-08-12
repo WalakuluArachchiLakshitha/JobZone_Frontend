@@ -1,6 +1,6 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, MapPin, Building2, UserPlus, CheckCircle, Users } from 'lucide-react';
+import { Search, MapPin, Building2, UserPlus, CheckCircle } from 'lucide-react';
 import { companiesApi } from '../api/companiesApi';
 import './Companies.css';
 
@@ -199,8 +199,8 @@ export default function Companies() {
                 aria-label="Select Sector"
               >
                 <option value="">Select Sector</option>
-                {uniqueSectors.map(s => (
-                  <option key={s} value={s}>{s}</option>
+                {filterCounts.industries.map(s => (
+                  <option key={s.name} value={s.name}>{s.name}</option>
                 ))}
               </select>
             </div>
