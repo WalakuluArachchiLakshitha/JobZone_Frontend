@@ -8,6 +8,7 @@ import './Navbar.css';
 const allUserMenuItems = [
   { to: '/dashboard?tab=overview', label: 'Dashboard', icon: LayoutGrid, id: 'nav-dropdown-overview', roles: ['candidate', 'employer'] },
   { to: '/dashboard?tab=profile', label: 'My Profile', icon: User, id: 'nav-dropdown-profile', roles: ['candidate', 'employer'] },
+  { to: '/dashboard?tab=my-jobs', label: 'My Jobs', icon: Briefcase, id: 'nav-dropdown-my-jobs', roles: ['employer'] },
   { to: '/dashboard?tab=resume', label: 'My Resume', icon: FileText, id: 'nav-dropdown-resume', roles: ['candidate'] },
   { to: '/dashboard?tab=applications', label: 'Applied Jobs', icon: Briefcase, id: 'nav-dropdown-applications', roles: ['candidate'] },
   { to: '/dashboard?tab=cv-manager', label: 'CV Manager', icon: Folder, id: 'nav-dropdown-cv-manager', roles: ['candidate'] },
@@ -58,7 +59,7 @@ export default function Navbar() {
   const navLinks = [
     { to: '/', label: 'Home' },
     { to: '/jobs', label: 'Jobs' },
-    { to: '/candidates', label: 'Candidates' },
+    { to: '/candidates', label: 'Candidates', roles: ['employer'] },
     // Only employers see "Post your Vacancy" when logged in
     { to: '/post-vacancy', label: 'Post your Vacancy', roles: ['employer'] },
     // Only candidates see "Create My CV" when logged in
@@ -67,10 +68,10 @@ export default function Navbar() {
     { to: '/contact', label: 'Contact us' },
   ];
 
-  // When logged in, filter by role; when logged out, show all links
+  // When logged in, filter by role; when logged out, show only public links (no roles specified)
   const visibleNavLinks = isLoggedIn
     ? navLinks.filter(link => !link.roles || link.roles.includes(role))
-    : navLinks;
+    : navLinks.filter(link => !link.roles);
 
   return (
     <nav className={`navbar ${isScrolled ? 'navbar--scrolled' : ''} ${isLoggedIn ? 'navbar--logged-in' : ''}`} id="main-navbar">

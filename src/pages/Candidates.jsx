@@ -60,6 +60,10 @@ export default function Candidates() {
   const [totalCandidates, setTotalCandidates] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Dynamic aggregation counts from backend
+  const [filterCounts, setFilterCounts] = useState({ locations: [], sectors: [] });
+  const [showAllSectors, setShowAllSectors] = useState(false);
 
   // Collapse state for sidebar
   const [collapsedSections, setCollapsedSections] = useState({
@@ -129,6 +133,9 @@ export default function Candidates() {
           setCandidatesList(res.seekers || []);
           setTotalCandidates(res.total || 0);
           setTotalPages(res.totalPages || 1);
+          if (res.counts) {
+            setFilterCounts(res.counts);
+          }
         }
       } catch (err) {
         console.error('Error fetching seekers:', err);
@@ -202,27 +209,39 @@ export default function Candidates() {
         </button>
         {!collapsedSections.sector && (
           <div className="candidates-filters__options">
-            {[
-              { label: 'All', count: 577 },
-              { label: 'Accounting & Finance', count: 125 },
-              { label: 'Administration & Office Support', count: 205 },
-              { label: 'Agriculture, Farming', count: 17 },
-              { label: 'Apparel, Garments & Textile', count: 47 },
-              { label: 'Architecture, Construction & Property', count: 2 }
-            ].map((sec) => (
-              <label key={sec.label} className="candidates-filters__checkbox" htmlFor={`c-filter-sec-${sec.label}`}>
+            <label className="candidates-filters__checkbox" htmlFor="c-filter-sec-All">
+              <input
+                type="checkbox"
+                id="c-filter-sec-All"
+                checked={selectedSectors.includes('All')}
+                onChange={() => toggleFilter(selectedSectors, setSelectedSectors, 'All')}
+              />
+              <span className="candidates-filters__checkmark" />
+              <span className="candidates-filters__label">All</span>
+              <span className="candidates-filters__count">{totalCandidates}</span>
+            </label>
+            {filterCounts.sectors.slice(0, showAllSectors ? undefined : 6).map((sec) => (
+              <label key={sec.name} className="candidates-filters__checkbox" htmlFor={`c-filter-sec-${sec.name}`}>
                 <input
                   type="checkbox"
-                  id={`c-filter-sec-${sec.label}`}
-                  checked={selectedSectors.includes(sec.label)}
-                  onChange={() => toggleFilter(selectedSectors, setSelectedSectors, sec.label)}
+                  id={`c-filter-sec-${sec.name}`}
+                  checked={selectedSectors.includes(sec.name)}
+                  onChange={() => toggleFilter(selectedSectors, setSelectedSectors, sec.name)}
                 />
                 <span className="candidates-filters__checkmark" />
-                <span className="candidates-filters__label">{sec.label}</span>
+                <span className="candidates-filters__label">{sec.name}</span>
                 <span className="candidates-filters__count">{sec.count}</span>
               </label>
             ))}
-            <button type="button" className="candidates-filters__see-more">+ see more</button>
+            {filterCounts.sectors.length > 6 && (
+              <button 
+                type="button" 
+                className="candidates-filters__see-more"
+                onClick={() => setShowAllSectors(!showAllSectors)}
+              >
+                {showAllSectors ? '- see less' : '+ see more'}
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -239,27 +258,19 @@ export default function Candidates() {
         </button>
         {!collapsedSections.locations && (
           <div className="candidates-filters__options">
-            {[
-              { label: 'Foreign Jobs', count: 0 },
-              { label: 'Australia', count: 0 },
-              { label: 'Canada', count: 0 },
-              { label: 'UAE', count: 0 },
-              { label: 'USA', count: 2 },
-              { label: 'Sri Lanka', count: 577 }
-            ].map((loc) => (
-              <label key={loc.label} className="candidates-filters__checkbox" htmlFor={`c-filter-loc-${loc.label}`}>
+            {filterCounts.locations.map((loc) => (
+              <label key={loc.name} className="candidates-filters__checkbox" htmlFor={`c-filter-loc-${loc.name}`}>
                 <input
                   type="checkbox"
-                  id={`c-filter-loc-${loc.label}`}
-                  checked={selectedLocations.includes(loc.label)}
-                  onChange={() => toggleFilter(selectedLocations, setSelectedLocations, loc.label)}
+                  id={`c-filter-loc-${loc.name}`}
+                  checked={selectedLocations.includes(loc.name)}
+                  onChange={() => toggleFilter(selectedLocations, setSelectedLocations, loc.name)}
                 />
                 <span className="candidates-filters__checkmark" />
-                <span className="candidates-filters__label">{loc.label}</span>
+                <span className="candidates-filters__label">{loc.name}</span>
                 <span className="candidates-filters__count">{loc.count}</span>
               </label>
             ))}
-            <button type="button" className="candidates-filters__see-more">+ see more</button>
           </div>
         )}
       </div>

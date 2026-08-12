@@ -32,6 +32,7 @@ import { resumeApi } from '../api/resumeApi';
 import { applicationsApi } from '../api/applicationsApi';
 import { savedJobsApi } from '../api/savedJobsApi';
 import { adminApi } from '../api/adminApi';
+import { jobsApi } from '../api/jobsApi';
 import './Dashboard.css';
 
 export default function Dashboard() {
@@ -44,6 +45,10 @@ export default function Dashboard() {
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState(user || {});
   const [applications, setApplications] = useState([]);
+  const [employerJobs, setEmployerJobs] = useState([]);
+  const [showEditJobModal, setShowEditJobModal] = useState(false);
+  const [editJobForm, setEditJobForm] = useState(null);
+  const [isUpdatingJob, setIsUpdatingJob] = useState(false);
   const [savedJobsList, setSavedJobsList] = useState([]);
 
   // Resume details states
@@ -112,6 +117,18 @@ export default function Dashboard() {
               .map(item => item.job)
               .filter(Boolean);
             setSavedJobsList(savedJobs);
+          }
+        }
+
+        // Employer data loading
+        if (role === 'employer') {
+          try {
+            const myJobsRes = await jobsApi.getMyJobs();
+            if (myJobsRes.success) {
+              setEmployerJobs(myJobsRes.jobs || []);
+            }
+          } catch (e) {
+            console.error('Failed to load employer jobs:', e);
           }
         }
 
@@ -190,30 +207,37 @@ export default function Dashboard() {
     return () => window.removeEventListener('jobzoneSavedJobsChanged', handleSavedJobsChanged);
   }, []);
 
-  // Sync to local storage
+  // Sync to local storage and backend
+  const initialLoad = useRef(true);
+  
   useEffect(() => {
+    // Keep local storage in sync for quick access
     localStorage.setItem('jobzoneResumeSkills', JSON.stringify(skills));
-  }, [skills]);
-
-  useEffect(() => {
     localStorage.setItem('jobzoneResumeEducation', JSON.stringify(educationList));
-  }, [educationList]);
-
-  useEffect(() => {
     localStorage.setItem('jobzoneResumeExperience', JSON.stringify(experienceList));
-  }, [experienceList]);
-
-  useEffect(() => {
     localStorage.setItem('jobzoneResumePortfolio', JSON.stringify(portfolioList));
-  }, [portfolioList]);
-
-  useEffect(() => {
     localStorage.setItem('jobzoneResumeLanguages', JSON.stringify(languageList));
-  }, [languageList]);
-
-  useEffect(() => {
     localStorage.setItem('jobzoneResumeReferences', JSON.stringify(referenceList));
-  }, [referenceList]);
+
+    if (initialLoad.current) {
+      initialLoad.current = false;
+      return;
+    }
+
+    if (role === 'candidate') {
+      const debounceTimer = setTimeout(() => {
+        resumeApi.updateResume({
+          skills,
+          education: educationList,
+          experience: experienceList,
+          portfolio: portfolioList,
+          languages: languageList,
+          references: referenceList
+        }).catch(err => console.error('Failed to sync resume to backend', err));
+      }, 1000);
+      return () => clearTimeout(debounceTimer);
+    }
+  }, [skills, educationList, experienceList, portfolioList, languageList, referenceList, role]);
 
   // Form toggle states
   const [showAddSkill, setShowAddSkill] = useState(false);
@@ -315,6 +339,66 @@ export default function Dashboard() {
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  const handleEmployerDeleteJob = async (jobId) => {
+    if (!window.confirm('Are you sure you want to delete this job posting?')) return;
+    try {
+      const res = await jobsApi.deleteJob(jobId);
+      if (res.success) {
+        setEmployerJobs(prev => prev.filter(j => j._id !== jobId));
+        alert('Job deleted successfully!');
+      }
+    } catch (err) {
+      alert(err.message || 'Failed to delete job');
+    }
+  };
+
+  const handleEditJobClick = (job) => {
+    // Format the date to YYYY-MM-DD for the input[type="date"]
+    let formattedDeadline = '';
+    if (job.deadline) {
+      // Try to parse the date
+      const d = new Date(job.deadline);
+      if (!isNaN(d.getTime())) {
+        formattedDeadline = d.toISOString().split('T')[0];
+      } else {
+        // Handle DD/MM/YYYY or DD-MM-YYYY formats just in case
+        const parts = job.deadline.split(/[\/\-]/);
+        if (parts.length === 3) {
+          // Check if format is likely DD/MM/YYYY
+          if (parts[0].length === 2 && parts[2].length === 4) {
+            formattedDeadline = `${parts[2]}-${parts[1]}-${parts[0]}`;
+          } else {
+            formattedDeadline = job.deadline; // hope it's YYYY-MM-DD
+          }
+        }
+      }
+    }
+    
+    setEditJobForm({
+      ...job,
+      deadline: formattedDeadline
+    });
+    setShowEditJobModal(true);
+  };
+
+  const handleUpdateJobSubmit = async (e) => {
+    e.preventDefault();
+    setIsUpdatingJob(true);
+    try {
+      const res = await jobsApi.updateJob(editJobForm._id, editJobForm);
+      if (res.success) {
+        setEmployerJobs(prev => prev.map(j => j._id === editJobForm._id ? res.job : j));
+        setShowEditJobModal(false);
+        setEditJobForm(null);
+        alert('Job updated successfully!');
+      }
+    } catch (err) {
+      alert(err.message || 'Failed to update job');
+    } finally {
+      setIsUpdatingJob(false);
+    }
   };
 
   const handleGenerateCV = async () => {
@@ -1223,9 +1307,20 @@ export default function Dashboard() {
                 onClick={() => { setActiveTab('profile'); setIsEditing(false); }}
                 id="dashboard-tab-profile"
               >
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                <User size={18} />
                 My Profile
               </button>
+
+              {role === 'employer' && (
+                <button
+                  className={`dashboard-nav__btn ${activeTab === 'my-jobs' ? 'dashboard-nav__btn--active' : ''}`}
+                  onClick={() => { setActiveTab('my-jobs'); setIsEditing(false); }}
+                  id="dashboard-tab-my-jobs"
+                >
+                  <Briefcase size={18} />
+                  My Jobs
+                </button>
+              )}
               {role === 'candidate' && (
                 <>
                   <button
@@ -1300,131 +1395,268 @@ export default function Dashboard() {
                   <h2 className="dashboard-pane__title">Overview</h2>
                 </div>
 
-                {/* Stats Row */}
-                <div className="dashboard-stats-grid" id="dashboard-stats-row">
-                  <div className="dashboard-stat-card glass-card">
-                    <div className="dashboard-stat-card__icon dashboard-stat-card__icon--blue">
-                      <FileText size={22} />
-                    </div>
-                    <div className="dashboard-stat-card__content">
-                      <span className="dashboard-stat-card__label">Applied Jobs</span>
-                      <h3 className="dashboard-stat-card__value">{applications.length}</h3>
-                    </div>
-                  </div>
-
-                  <div className="dashboard-stat-card glass-card">
-                    <div className="dashboard-stat-card__icon dashboard-stat-card__icon--yellow">
-                      <Clock size={22} />
-                    </div>
-                    <div className="dashboard-stat-card__content">
-                      <span className="dashboard-stat-card__label">In Review</span>
-                      <h3 className="dashboard-stat-card__value">
-                        {applications.filter((a) => a.status === 'In Review').length}
-                      </h3>
-                    </div>
-                  </div>
-
-                  <div className="dashboard-stat-card glass-card">
-                    <div className="dashboard-stat-card__icon dashboard-stat-card__icon--green">
-                      <TrendingUp size={22} />
-                    </div>
-                    <div className="dashboard-stat-card__content">
-                      <span className="dashboard-stat-card__label">Interviews</span>
-                      <h3 className="dashboard-stat-card__value">
-                        {applications.filter((a) => a.status === 'Interview').length}
-                      </h3>
-                    </div>
-                  </div>
-
-                  <div className="dashboard-stat-card glass-card">
-                    <div className="dashboard-stat-card__icon dashboard-stat-card__icon--pink">
-                      <BookmarkCheck size={22} />
-                    </div>
-                    <div className="dashboard-stat-card__content">
-                      <span className="dashboard-stat-card__label">Saved Jobs</span>
-                      <h3 className="dashboard-stat-card__value">{savedJobsList.length}</h3>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="dashboard-pane__section glass-card" style={{ marginTop: '24px' }}>
-                  <div className="dashboard-section-header">
-                    <h3 className="dashboard-section-title">Recent Applications</h3>
-                    <button
-                      className="dashboard-section-link"
-                      onClick={() => setActiveTab('applications')}
-                    >
-                      View All
-                      <ArrowRight size={14} />
-                    </button>
-                  </div>
-
-                  <div className="dashboard-apps-list">
-                    {applications.slice(0, 3).map((app) => (
-                      <div key={app.id} className="dashboard-app-item">
-                        <div className="dashboard-app-item__logo">
-                          <img src={app.job.company.logo} alt={app.job.company.name} />
+                {role === 'employer' ? (
+                  <>
+                    <div className="dashboard-stats-grid" id="dashboard-stats-row">
+                      <div className="dashboard-stat-card glass-card">
+                        <div className="dashboard-stat-card__icon dashboard-stat-card__icon--blue">
+                          <Briefcase size={22} />
                         </div>
-                        <div className="dashboard-app-item__info">
-                          <h4>{app.job.title}</h4>
-                          <p>{app.job.company.name}</p>
+                        <div className="dashboard-stat-card__content">
+                          <span className="dashboard-stat-card__label">Posted Jobs</span>
+                          <h3 className="dashboard-stat-card__value">{employerJobs.length}</h3>
                         </div>
-                        <div className="dashboard-app-item__date">
-                          <span>Applied on</span>
-                          <strong>{app.appliedDate}</strong>
+                      </div>
+
+                      <div className="dashboard-stat-card glass-card">
+                        <div className="dashboard-stat-card__icon dashboard-stat-card__icon--green">
+                          <CheckCircle size={22} />
                         </div>
-                        <div className="dashboard-app-item__status">
-                          {getStatusBadge(app.status)}
+                        <div className="dashboard-stat-card__content">
+                          <span className="dashboard-stat-card__label">Active Jobs</span>
+                          <h3 className="dashboard-stat-card__value">
+                            {employerJobs.filter(j => j.status !== 'closed').length}
+                          </h3>
                         </div>
-                        <Link
-                          to={`/jobs/${app.job.id}`}
-                          className="dashboard-app-item__action"
-                          aria-label="View job details"
+                      </div>
+                      
+                      <div className="dashboard-stat-card glass-card">
+                        <div className="dashboard-stat-card__icon dashboard-stat-card__icon--yellow">
+                          <TrendingUp size={22} />
+                        </div>
+                        <div className="dashboard-stat-card__content">
+                          <span className="dashboard-stat-card__label">Total Views</span>
+                          <h3 className="dashboard-stat-card__value">
+                            {employerJobs.reduce((acc, job) => acc + (job.views || 0), 0)}
+                          </h3>
+                        </div>
+                      </div>
+                      
+                      <div className="dashboard-stat-card glass-card">
+                        <div className="dashboard-stat-card__icon dashboard-stat-card__icon--pink">
+                          <FileText size={22} />
+                        </div>
+                        <div className="dashboard-stat-card__content">
+                          <span className="dashboard-stat-card__label">Closed Jobs</span>
+                          <h3 className="dashboard-stat-card__value">
+                            {employerJobs.filter(j => j.status === 'closed').length}
+                          </h3>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="dashboard-pane__section glass-card" style={{ marginTop: '24px' }}>
+                      <div className="dashboard-section-header">
+                        <h3 className="dashboard-section-title">Recent Postings</h3>
+                        <button
+                          className="dashboard-section-link"
+                          onClick={() => setActiveTab('my-jobs')}
                         >
-                          <Eye size={16} />
+                          View All
+                          <ArrowRight size={14} />
+                        </button>
+                      </div>
+
+                      <div className="dashboard-apps-list">
+                        {employerJobs.slice(0, 3).map((job) => (
+                          <div key={job._id || job.id} className="dashboard-app-item">
+                            <div className="dashboard-app-item__logo" style={{ background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <Briefcase size={24} color="#0284c7" />
+                            </div>
+                            <div className="dashboard-app-item__info">
+                              <h4>{job.title}</h4>
+                              <p>{job.type || 'Full Time'} • {job.location}</p>
+                            </div>
+                            <div className="dashboard-app-item__date">
+                              <span>Posted on</span>
+                              <strong>{new Date(job.createdAt).toLocaleDateString()}</strong>
+                            </div>
+                            <div className="dashboard-app-item__status">
+                              <span className={`status-badge status-badge--${(job.status || 'open').toLowerCase()}`}>
+                                {job.status || 'Open'}
+                              </span>
+                            </div>
+                            <Link
+                              to={`/jobs/${job._id || job.id}`}
+                              className="dashboard-app-item__action"
+                              aria-label="View job details"
+                            >
+                              <Eye size={16} />
+                            </Link>
+                          </div>
+                        ))}
+                        {employerJobs.length === 0 && (
+                          <p style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>No recent job postings found.</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="dashboard-quick-actions">
+                      <h3 className="dashboard-quick-actions__title">Quick Actions</h3>
+                      <div className="dashboard-quick-actions__grid">
+                        <Link to="/post-vacancy" className="quick-action-card glass-card">
+                          <div className="quick-action-card__icon">
+                            <Briefcase size={20} />
+                          </div>
+                          <h4>Post a Job</h4>
+                          <p>Find your next great hire</p>
                         </Link>
-                      </div>
-                    ))}
-                  </div>
-                </div>
 
-                <div className="dashboard-quick-actions">
-                  <h3 className="dashboard-quick-actions__title">Quick Actions</h3>
-                  <div className="dashboard-quick-actions__grid">
-                    <Link to="/jobs" className="quick-action-card glass-card">
-                      <div className="quick-action-card__icon">
-                        <Briefcase size={20} />
-                      </div>
-                      <h4>Search Jobs</h4>
-                      <p>Explore thousands of open opportunities</p>
-                    </Link>
+                        <button
+                          onClick={() => {
+                            setActiveTab('profile');
+                            setIsEditing(true);
+                          }}
+                          className="quick-action-card glass-card text-left btn-clear"
+                        >
+                          <div className="quick-action-card__icon">
+                            <Edit3 size={20} />
+                          </div>
+                          <h4>Update Profile</h4>
+                          <p>Keep your details and resume fresh</p>
+                        </button>
 
-                    <button
-                      onClick={() => {
-                        setActiveTab('profile');
-                        setIsEditing(true);
-                      }}
-                      className="quick-action-card glass-card text-left btn-clear"
-                    >
-                      <div className="quick-action-card__icon">
-                        <Edit3 size={20} />
+                        <button
+                          onClick={() => setActiveTab('my-jobs')}
+                          className="quick-action-card glass-card text-left btn-clear"
+                        >
+                          <div className="quick-action-card__icon">
+                            <BookmarkCheck size={20} />
+                          </div>
+                          <h4>Manage Postings</h4>
+                          <p>Edit or close existing jobs</p>
+                        </button>
                       </div>
-                      <h4>Update Profile</h4>
-                      <p>Keep your details and resume fresh</p>
-                    </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="dashboard-stats-grid" id="dashboard-stats-row">
+                      <div className="dashboard-stat-card glass-card">
+                        <div className="dashboard-stat-card__icon dashboard-stat-card__icon--blue">
+                          <FileText size={22} />
+                        </div>
+                        <div className="dashboard-stat-card__content">
+                          <span className="dashboard-stat-card__label">Applied Jobs</span>
+                          <h3 className="dashboard-stat-card__value">{applications.length}</h3>
+                        </div>
+                      </div>
 
-                    <button
-                      onClick={() => setActiveTab('saved')}
-                      className="quick-action-card glass-card text-left btn-clear"
-                    >
-                      <div className="quick-action-card__icon">
-                        <BookmarkCheck size={20} />
+                      <div className="dashboard-stat-card glass-card">
+                        <div className="dashboard-stat-card__icon dashboard-stat-card__icon--yellow">
+                          <Clock size={22} />
+                        </div>
+                        <div className="dashboard-stat-card__content">
+                          <span className="dashboard-stat-card__label">In Review</span>
+                          <h3 className="dashboard-stat-card__value">
+                            {applications.filter((a) => a.status === 'In Review').length}
+                          </h3>
+                        </div>
                       </div>
-                      <h4>View Saved</h4>
-                      <p>Check jobs you have bookmarked</p>
-                    </button>
-                  </div>
-                </div>
+
+                      <div className="dashboard-stat-card glass-card">
+                        <div className="dashboard-stat-card__icon dashboard-stat-card__icon--green">
+                          <TrendingUp size={22} />
+                        </div>
+                        <div className="dashboard-stat-card__content">
+                          <span className="dashboard-stat-card__label">Interviews</span>
+                          <h3 className="dashboard-stat-card__value">
+                            {applications.filter((a) => a.status === 'Interview').length}
+                          </h3>
+                        </div>
+                      </div>
+
+                      <div className="dashboard-stat-card glass-card">
+                        <div className="dashboard-stat-card__icon dashboard-stat-card__icon--pink">
+                          <BookmarkCheck size={22} />
+                        </div>
+                        <div className="dashboard-stat-card__content">
+                          <span className="dashboard-stat-card__label">Saved Jobs</span>
+                          <h3 className="dashboard-stat-card__value">{savedJobsList.length}</h3>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="dashboard-pane__section glass-card" style={{ marginTop: '24px' }}>
+                      <div className="dashboard-section-header">
+                        <h3 className="dashboard-section-title">Recent Applications</h3>
+                        <button
+                          className="dashboard-section-link"
+                          onClick={() => setActiveTab('applications')}
+                        >
+                          View All
+                          <ArrowRight size={14} />
+                        </button>
+                      </div>
+
+                      <div className="dashboard-apps-list">
+                        {applications.slice(0, 3).map((app) => (
+                          <div key={app._id || app.id} className="dashboard-app-item">
+                            <div className="dashboard-app-item__logo">
+                              <img src={app.job?.company?.logo || 'https://via.placeholder.com/50'} alt={app.job?.company?.name || 'Company'} />
+                            </div>
+                            <div className="dashboard-app-item__info">
+                              <h4>{app.job?.title}</h4>
+                              <p>{app.job?.company?.name}</p>
+                            </div>
+                            <div className="dashboard-app-item__date">
+                              <span>Applied on</span>
+                              <strong>{app.appliedDate}</strong>
+                            </div>
+                            <div className="dashboard-app-item__status">
+                              {getStatusBadge(app.status)}
+                            </div>
+                            <Link
+                              to={app.job ? `/jobs/${app.job.id}` : '#'}
+                              className="dashboard-app-item__action"
+                              aria-label="View job details"
+                            >
+                              <Eye size={16} />
+                            </Link>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="dashboard-quick-actions">
+                      <h3 className="dashboard-quick-actions__title">Quick Actions</h3>
+                      <div className="dashboard-quick-actions__grid">
+                        <Link to="/jobs" className="quick-action-card glass-card">
+                          <div className="quick-action-card__icon">
+                            <Briefcase size={20} />
+                          </div>
+                          <h4>Search Jobs</h4>
+                          <p>Explore thousands of open opportunities</p>
+                        </Link>
+
+                        <button
+                          onClick={() => {
+                            setActiveTab('profile');
+                            setIsEditing(true);
+                          }}
+                          className="quick-action-card glass-card text-left btn-clear"
+                        >
+                          <div className="quick-action-card__icon">
+                            <Edit3 size={20} />
+                          </div>
+                          <h4>Update Profile</h4>
+                          <p>Keep your details and resume fresh</p>
+                        </button>
+
+                        <button
+                          onClick={() => setActiveTab('saved')}
+                          className="quick-action-card glass-card text-left btn-clear"
+                        >
+                          <div className="quick-action-card__icon">
+                            <BookmarkCheck size={20} />
+                          </div>
+                          <h4>View Saved</h4>
+                          <p>Check jobs you have bookmarked</p>
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             )}
 
@@ -1449,7 +1681,7 @@ export default function Dashboard() {
                       </thead>
                       <tbody>
                         {applications.map((app) => (
-                          <tr key={app.id}>
+                          <tr key={app._id || app.id}>
                             <td>
                               <div className="dashboard-table-job">
                                 <span className="dashboard-table-job__title">{app.job.title}</span>
@@ -2478,6 +2710,79 @@ export default function Dashboard() {
               </div>
             )}
 
+            {/* EMPLOYER MY JOBS TAB */}
+            {activeTab === 'my-jobs' && role === 'employer' && (
+              <div className="dashboard-pane animate-fadeIn" id="pane-my-jobs">
+                <div className="dashboard-pane__header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h2 className="dashboard-pane__title">My Posted Jobs</h2>
+                  <Link to="/post-vacancy" className="btn btn-primary" style={{ padding: '8px 16px', fontSize: '13px' }}>
+                    + Post New Job
+                  </Link>
+                </div>
+
+                <div className="glass-card" style={{ padding: '24px' }}>
+                  {employerJobs.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '40px 20px', color: '#6b7280' }}>
+                      <Briefcase size={48} style={{ margin: '0 auto 12px', opacity: 0.5 }} />
+                      <p>You haven't posted any jobs yet.</p>
+                      <Link to="/post-vacancy" className="btn btn-primary" style={{ marginTop: '16px' }}>Post a Job</Link>
+                    </div>
+                  ) : (
+                    <div className="table-responsive" style={{ overflowX: 'auto' }}>
+                      <table className="admin-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+                        <thead>
+                          <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', textAlign: 'left' }}>
+                            <th style={{ padding: '12px' }}>Job Title</th>
+                            <th style={{ padding: '12px' }}>Location</th>
+                            <th style={{ padding: '12px' }}>Type</th>
+                            <th style={{ padding: '12px' }}>Posted On</th>
+                            <th style={{ padding: '12px', textAlign: 'right' }}>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {employerJobs.map((j) => (
+                            <tr key={j._id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                              <td style={{ padding: '12px' }}>
+                                <strong>{j.title}</strong>
+                                <br/>
+                                <span style={{ fontSize: '12px', color: '#6b7280' }}>{j.category || j.industry}</span>
+                              </td>
+                              <td style={{ padding: '12px' }}>{j.location}</td>
+                              <td style={{ padding: '12px' }}>{j.type || 'Full Time'}</td>
+                              <td style={{ padding: '12px' }}>{new Date(j.createdAt).toLocaleDateString()}</td>
+                              <td style={{ padding: '12px', textAlign: 'right' }}>
+                                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                                  <Link to={`/jobs/${j._id}`} className="btn btn-secondary" style={{ padding: '6px 10px', fontSize: '12px' }} title="View">
+                                    <Eye size={14} />
+                                  </Link>
+                                  <button 
+                                    className="btn btn-secondary" 
+                                    style={{ padding: '6px 10px', fontSize: '12px', color: '#0369a1', background: '#e0f2fe' }} 
+                                    onClick={() => handleEditJobClick(j)}
+                                    title="Edit"
+                                  >
+                                    <Edit3 size={14} />
+                                  </button>
+                                  <button 
+                                    className="btn btn-secondary" 
+                                    style={{ padding: '6px 10px', fontSize: '12px', color: '#b91c1c', background: '#fee2e2' }} 
+                                    onClick={() => handleEmployerDeleteJob(j._id)}
+                                    title="Delete"
+                                  >
+                                    <X size={14} />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* CHANGE PASSWORD TAB */}
             {activeTab === 'change-password' && (
               <div className="dashboard-pane animate-fadeIn" id="pane-change-password">
@@ -2549,6 +2854,66 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* EDIT JOB MODAL */}
+      {showEditJobModal && editJobForm && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '20px' }}>
+          <div className="glass-card animate-fadeIn" style={{ background: '#fff', width: '100%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto', borderRadius: '12px', padding: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid #e2e8f0' }}>
+              <h3 style={{ margin: 0, fontSize: '1.25rem', color: '#0f172a' }}>Edit Job Vacancy</h3>
+              <button onClick={() => setShowEditJobModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}>
+                <X size={24} />
+              </button>
+            </div>
+            <form onSubmit={handleUpdateJobSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '600' }}>Job Title</label>
+                <input type="text" className="form-input" style={{ width: '100%', padding: '10px', border: '1px solid #cbd5e1', borderRadius: '6px' }} value={editJobForm.title || ''} onChange={e => setEditJobForm({...editJobForm, title: e.target.value})} required />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '600' }}>Location</label>
+                  <input type="text" className="form-input" style={{ width: '100%', padding: '10px', border: '1px solid #cbd5e1', borderRadius: '6px' }} value={editJobForm.location || ''} onChange={e => setEditJobForm({...editJobForm, location: e.target.value})} required />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '600' }}>Job Type</label>
+                  <select className="form-input" style={{ width: '100%', padding: '10px', border: '1px solid #cbd5e1', borderRadius: '6px' }} value={editJobForm.type || ''} onChange={e => setEditJobForm({...editJobForm, type: e.target.value})} required>
+                    <option value="">Select Type</option>
+                    <option value="full-time">Full Time</option>
+                    <option value="part-time">Part Time</option>
+                    <option value="contract">Contract</option>
+                    <option value="internship">Internship</option>
+                    <option value="remote">Remote</option>
+                    <option value="freelance">Freelance</option>
+                  </select>
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '600' }}>Category</label>
+                  <input type="text" className="form-input" style={{ width: '100%', padding: '10px', border: '1px solid #cbd5e1', borderRadius: '6px' }} value={editJobForm.category || ''} onChange={e => setEditJobForm({...editJobForm, category: e.target.value})} required />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '600' }}>Salary Range</label>
+                  <input type="text" className="form-input" style={{ width: '100%', padding: '10px', border: '1px solid #cbd5e1', borderRadius: '6px' }} value={editJobForm.salaryText || editJobForm.salary || ''} onChange={e => setEditJobForm({...editJobForm, salaryText: e.target.value})} required />
+                </div>
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '600' }}>Application Deadline</label>
+                <input type="date" className="form-input" style={{ width: '100%', padding: '10px', border: '1px solid #cbd5e1', borderRadius: '6px' }} value={editJobForm.deadline || ''} onChange={e => setEditJobForm({...editJobForm, deadline: e.target.value})} required />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '600' }}>Job Description</label>
+                <textarea className="form-input" rows="5" style={{ width: '100%', padding: '10px', border: '1px solid #cbd5e1', borderRadius: '6px', resize: 'vertical' }} value={editJobForm.description || ''} onChange={e => setEditJobForm({...editJobForm, description: e.target.value})} required />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '16px' }}>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowEditJobModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary" disabled={isUpdatingJob}>{isUpdatingJob ? 'Saving...' : 'Save Changes'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
