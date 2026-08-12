@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { userApi } from '../api/userApi';
+import { applicationsApi } from '../api/applicationsApi';
 import './Candidates.css';
 
 const CANDIDATES_PER_PAGE = 10;
@@ -112,40 +113,49 @@ export default function Candidates() {
           limit: CANDIDATES_PER_PAGE,
         };
 
-        if (activeSearch) {
-          queryParams.search = activeSearch;
-        }
+        if (isLoggedIn && userRole === 'employer') {
+          const res = await applicationsApi.getApplications(queryParams);
+          if (res.success) {
+            setCandidatesList(res.applications || []);
+            setTotalCandidates(res.total || 0);
+            setTotalPages(res.totalPages || 1);
+          }
+        } else {
+          if (activeSearch) {
+            queryParams.search = activeSearch;
+          }
 
-        if (activeLocation) {
-          queryParams.location = activeLocation;
-        } else if (selectedLocations.length > 0) {
-          queryParams.location = selectedLocations[0];
-        }
+          if (activeLocation) {
+            queryParams.location = activeLocation;
+          } else if (selectedLocations.length > 0) {
+            queryParams.location = selectedLocations[0];
+          }
 
-        if (activeSector) {
-          queryParams.sector = activeSector;
-        } else if (selectedSectors.length > 0 && !selectedSectors.includes('All')) {
-          queryParams.sector = selectedSectors[0];
-        }
+          if (activeSector) {
+            queryParams.sector = activeSector;
+          } else if (selectedSectors.length > 0 && !selectedSectors.includes('All')) {
+            queryParams.sector = selectedSectors[0];
+          }
 
-        const res = await userApi.getSeekers(queryParams);
-        if (res.success) {
-          setCandidatesList(res.seekers || []);
-          setTotalCandidates(res.total || 0);
-          setTotalPages(res.totalPages || 1);
-          if (res.counts) {
-            setFilterCounts(res.counts);
+          const res = await userApi.getSeekers(queryParams);
+          if (res.success) {
+            setCandidatesList(res.seekers || []);
+            setTotalCandidates(res.total || 0);
+            setTotalPages(res.totalPages || 1);
+            if (res.counts) {
+              setFilterCounts(res.counts);
+            }
           }
         }
       } catch (err) {
-        console.error('Error fetching seekers:', err);
+        console.error('Error fetching data:', err);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchCandidates();
-  }, [activeSearch, activeLocation, activeSector, selectedLocations, selectedSectors, currentPage]);
+  }, [activeSearch, activeLocation, activeSector, selectedLocations, selectedSectors, currentPage, isLoggedIn, userRole]);
 
   const getPageNumbers = () => {
     const pages = [];
@@ -300,13 +310,31 @@ export default function Candidates() {
     </div>
   );
 
+  const groupedJobs = {};
+  if (isLoggedIn && userRole === 'employer') {
+    candidatesList.forEach(app => {
+      const job = app.job;
+      const jobId = job?._id || job?.id;
+      if (!jobId) return;
+      if (!groupedJobs[jobId]) {
+        groupedJobs[jobId] = {
+          job,
+          applications: []
+        };
+      }
+      groupedJobs[jobId].applications.push(app);
+    });
+  }
+
   return (
     <main className="candidates-page">
       {/* ===== HERO BANNER ===== */}
       <section className="candidates-hero">
         <div className="container">
           <div className="candidates-hero__content">
-            <h1 className="candidates-hero__title">Candidates</h1>
+            <h1 className="candidates-hero__title">
+              {isLoggedIn && userRole === 'employer' ? 'Job Applicants' : 'Candidates'}
+            </h1>
           </div>
         </div>
       </section>
@@ -317,91 +345,99 @@ export default function Candidates() {
           <div className="candidates-breadcrumb">
             <Link to="/">Home</Link>
             <span className="candidates-breadcrumb__separator">&gt;</span>
-            <span className="candidates-breadcrumb__current">Candidates</span>
+            <span className="candidates-breadcrumb__current">
+              {isLoggedIn && userRole === 'employer' ? 'Applicants' : 'Candidates'}
+            </span>
           </div>
         </div>
       </div>
 
       {/* ===== STANDALONE SEARCH CARD ===== */}
-      <section className="candidates-search-section">
-        <div className="container">
-          <form className="candidates-search" onSubmit={handleSearch} id="candidates-search-form">
-            <div className="candidates-search__field">
-              <input
-                type="text"
-                placeholder="Title, Keywords, or Phrase"
-                value={searchTitle}
-                onChange={(e) => setSearchTitle(e.target.value)}
-                className="candidates-search__input"
-                id="candidates-search-title"
-              />
-            </div>
-            
-            <div className="candidates-search__divider" />
-            
-            <div className="candidates-search__field candidates-search__field--location">
-              <input
-                type="text"
-                placeholder="City, State or ZIP"
-                value={searchLocation}
-                onChange={(e) => setSearchLocation(e.target.value)}
-                className="candidates-search__input"
-                id="candidates-search-location"
-              />
-              <Locate size={18} className="candidates-search__locate-icon" />
-            </div>
-            
-            <div className="candidates-search__divider" />
-            
-            <div className="candidates-search__field">
-              <select
-                value={searchSector}
-                onChange={(e) => setSearchSector(e.target.value)}
-                className="candidates-search__select"
-                id="candidates-search-sector"
-                aria-label="Select Sector"
-              >
-                <option value="">Select Sector</option>
-                <option value="Accounting & Finance">Accounting & Finance</option>
-                <option value="Administration & Office Support">Administration & Office Support</option>
-                <option value="Agriculture, Farming">Agriculture, Farming</option>
-                <option value="Apparel, Garments & Textile">Apparel, Garments & Textile</option>
-                <option value="Architecture, Construction & Property">Architecture, Construction & Property</option>
-                <option value="Engineering & Technical">Engineering & Technical</option>
-                <option value="Hospitality, Travel & Tourism">Hospitality, Travel & Tourism</option>
-                <option value="Marketing, Sales & Business Development">Marketing, Sales & Business Development</option>
-              </select>
-              <ChevronDown size={14} className="candidates-search__select-chevron" />
-            </div>
-            
-            <button type="submit" className="candidates-search__btn" id="candidates-search-btn" aria-label="Search">
-              <Search size={18} />
-            </button>
-          </form>
-        </div>
-      </section>
+      {!(isLoggedIn && userRole === 'employer') && (
+        <section className="candidates-search-section">
+          <div className="container">
+            <form className="candidates-search" onSubmit={handleSearch} id="candidates-search-form">
+              <div className="candidates-search__field">
+                <input
+                  type="text"
+                  placeholder="Title, Keywords, or Phrase"
+                  value={searchTitle}
+                  onChange={(e) => setSearchTitle(e.target.value)}
+                  className="candidates-search__input"
+                  id="candidates-search-title"
+                />
+              </div>
+              
+              <div className="candidates-search__divider" />
+              
+              <div className="candidates-search__field candidates-search__field--location">
+                <input
+                  type="text"
+                  placeholder="City, State or ZIP"
+                  value={searchLocation}
+                  onChange={(e) => setSearchLocation(e.target.value)}
+                  className="candidates-search__input"
+                  id="candidates-search-location"
+                />
+                <Locate size={18} className="candidates-search__locate-icon" />
+              </div>
+              
+              <div className="candidates-search__divider" />
+              
+              <div className="candidates-search__field">
+                <select
+                  value={searchSector}
+                  onChange={(e) => setSearchSector(e.target.value)}
+                  className="candidates-search__select"
+                  id="candidates-search-sector"
+                  aria-label="Select Sector"
+                >
+                  <option value="">Select Sector</option>
+                  <option value="Accounting & Finance">Accounting & Finance</option>
+                  <option value="Administration & Office Support">Administration & Office Support</option>
+                  <option value="Agriculture, Farming">Agriculture, Farming</option>
+                  <option value="Apparel, Garments & Textile">Apparel, Garments & Textile</option>
+                  <option value="Architecture, Construction & Property">Architecture, Construction & Property</option>
+                  <option value="Engineering & Technical">Engineering & Technical</option>
+                  <option value="Hospitality, Travel & Tourism">Hospitality, Travel & Tourism</option>
+                  <option value="Marketing, Sales & Business Development">Marketing, Sales & Business Development</option>
+                </select>
+                <ChevronDown size={14} className="candidates-search__select-chevron" />
+              </div>
+              
+              <button type="submit" className="candidates-search__btn" id="candidates-search-btn" aria-label="Search">
+                <Search size={18} />
+              </button>
+            </form>
+          </div>
+        </section>
+      )}
 
       {/* Main Content */}
       <section className="candidates-content">
         <div className="container">
-          <div className="candidates-layout">
+          <div className="candidates-layout" style={isLoggedIn && userRole === 'employer' ? { gridTemplateColumns: '1fr' } : {}}>
             {/* Mobile Filter Button */}
-            <button
-              className="candidates-mobile-filter-btn btn btn-secondary"
-              onClick={() => setMobileFiltersOpen(true)}
-              id="mobile-filter-btn"
-            >
-              <SlidersHorizontal size={18} />
-              Filters
-            </button>
+            {!(isLoggedIn && userRole === 'employer') && (
+              <button
+                className="candidates-mobile-filter-btn btn btn-secondary"
+                onClick={() => setMobileFiltersOpen(true)}
+                id="mobile-filter-btn"
+              >
+                <SlidersHorizontal size={18} />
+                Filters
+              </button>
+            )}
 
             {/* Filter Sidebar - Desktop */}
-            <aside className="candidates-sidebar" id="candidates-sidebar">
-              {renderFilters(false)}
-            </aside>
+            {!(isLoggedIn && userRole === 'employer') && (
+              <aside className="candidates-sidebar" id="candidates-sidebar">
+                {renderFilters(false)}
+              </aside>
+            )}
 
             {/* Mobile Filter Drawer */}
-            {mobileFiltersOpen && (
+            {mobileFiltersOpen && !(isLoggedIn && userRole === 'employer') && (
               <div className="candidates-drawer-overlay" onClick={() => setMobileFiltersOpen(false)}>
                 <aside
                   className="candidates-drawer"
@@ -448,37 +484,47 @@ export default function Candidates() {
               {/* Results Header */}
               <div className="candidates-results__header">
                 <div className="candidates-results__header-left">
-                  <h2 className="candidates-results__title">{totalCandidates} Candidates Found</h2>
+                  <h2 className="candidates-results__title">
+                    {isLoggedIn && userRole === 'employer' 
+                      ? `${totalCandidates} Total Applications`
+                      : `${totalCandidates} Candidates Found`
+                    }
+                  </h2>
                   <p className="candidates-results__subtitle">
-                    Displayed Here: {totalCandidates > 0 ? (currentPage - 1) * CANDIDATES_PER_PAGE + 1 : 0} - {Math.min(currentPage * CANDIDATES_PER_PAGE, totalCandidates)} Candidates
+                    {isLoggedIn && userRole === 'employer'
+                      ? `Showing ${candidatesList.length} application${candidatesList.length === 1 ? '' : 's'}`
+                      : `Displayed Here: {totalCandidates > 0 ? (currentPage - 1) * CANDIDATES_PER_PAGE + 1 : 0} - {Math.min(currentPage * CANDIDATES_PER_PAGE, totalCandidates)} Candidates`
+                    }
                   </p>
                 </div>
                 
-                <div className="candidates-results__header-right">
-                  <div className="candidates-results__select-wrap">
-                    <ArrowUpDown size={14} className="candidates-results__sort-left-icon" />
-                    <select
-                      id="candidates-sort-select"
-                      value={sortBy}
-                      onChange={(e) => setSortBy(e.target.value)}
-                      className="candidates-results__sort-select"
-                      aria-label="Sort by"
-                    >
-                      <option value="relevance">Most Recent</option>
-                    </select>
-                    <ChevronDown size={12} className="candidates-results__select-icon" />
-                  </div>
+                {!(isLoggedIn && userRole === 'employer') && (
+                  <div className="candidates-results__header-right">
+                    <div className="candidates-results__select-wrap">
+                      <ArrowUpDown size={14} className="candidates-results__sort-left-icon" />
+                      <select
+                        id="candidates-sort-select"
+                        value={sortBy}
+                        onChange={(e) => setSortBy(e.target.value)}
+                        className="candidates-results__sort-select"
+                        aria-label="Sort by"
+                      >
+                        <option value="relevance">Most Recent</option>
+                      </select>
+                      <ChevronDown size={12} className="candidates-results__select-icon" />
+                    </div>
 
-                  <div className="candidates-results__select-wrap">
-                    <List size={14} className="candidates-results__sort-left-icon" />
-                    <select className="candidates-results__sort-select" defaultValue="10" aria-label="Records per page">
-                      <option value="10">10 Per Page</option>
-                      <option value="20">20 Per Page</option>
-                      <option value="50">50 Per Page</option>
-                    </select>
-                    <ChevronDown size={12} className="candidates-results__select-icon" />
+                    <div className="candidates-results__select-wrap">
+                      <List size={14} className="candidates-results__sort-left-icon" />
+                      <select className="candidates-results__sort-select" defaultValue="10" aria-label="Records per page">
+                        <option value="10">10 Per Page</option>
+                        <option value="20">20 Per Page</option>
+                        <option value="50">50 Per Page</option>
+                      </select>
+                      <ChevronDown size={12} className="candidates-results__select-icon" />
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
               {/* Candidates Cards List */}
@@ -488,97 +534,213 @@ export default function Candidates() {
                     Loading candidates...
                   </div>
                 ) : candidatesList.length > 0 ? (
-                  candidatesList.map((cand, idx) => {
-                    const candId = cand._id || cand.id;
-                    const name = cand.name || `${cand.firstName} ${cand.lastName}`;
-                    const serverOrigin = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/, '');
-                    const avatarUrl = cand.avatar 
-                      ? (cand.avatar.startsWith('http') ? cand.avatar : `${serverOrigin}${cand.avatar.startsWith('/') ? cand.avatar : `/${cand.avatar}`}`) 
-                      : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&h=100&q=80';
-                    const roleName = cand.title || 'Professional Seeker';
-                    const candLocation = cand.location || 'Sri Lanka';
-                    const firstSkill = cand.skills && cand.skills.length > 0 ? cand.skills[0] : 'Information Technology';
-                    const isSaved = savedCandidates.includes(candId);
-                    
-                    return (
-                      <div
-                        key={candId}
-                        className="candidate-row-card"
-                        style={{ animationDelay: `${idx * 0.05}s` }}
-                      >
-                        <div className="candidate-row-card__avatar-container">
-                          {isLoggedIn && userRole === 'employer' ? (
-                            <Link to={`/candidates/${candId}`} className="candidate-row-card__avatar-link">
-                              <img 
-                                src={avatarUrl} 
-                                alt={`${name} avatar`} 
-                                className="candidate-row-card__avatar"
-                                loading="lazy"
-                              />
-                            </Link>
-                          ) : (
+                  isLoggedIn && userRole === 'employer' ? (
+                    Object.values(groupedJobs).map((group, groupIdx) => (
+                      <div key={group.job._id || group.job.id} className="job-applicants-group" style={{ marginBottom: '30px' }}>
+                        <div className="job-applicants-group__header" style={{
+                          background: 'linear-gradient(135deg, #f5f8ff 0%, #eef3ff 100%)',
+                          padding: '16px 20px',
+                          borderRadius: '12px',
+                          borderLeft: '4px solid #004ae4',
+                          marginBottom: '15px',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          boxShadow: '0 2px 8px rgba(0, 74, 228, 0.04)'
+                        }}>
+                          <div>
+                            <h3 style={{ margin: 0, color: '#0f172a', fontSize: '1.2rem', fontWeight: '700' }}>
+                              {group.job.title}
+                            </h3>
+                            <span style={{ color: '#64748b', fontSize: '0.85rem' }}>
+                              {group.job.type} • {group.job.location}
+                            </span>
+                          </div>
+                          <span style={{
+                            background: '#004ae4',
+                            color: '#fff',
+                            padding: '4px 12px',
+                            borderRadius: '20px',
+                            fontSize: '0.8rem',
+                            fontWeight: '600'
+                          }}>
+                            {group.applications.length} {group.applications.length === 1 ? 'Applicant' : 'Applicants'}
+                          </span>
+                        </div>
+                        <div className="job-applicants-group__list" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                          {group.applications.map((app, idx) => {
+                            const cand = app.seeker;
+                            if (!cand) return null;
+                            const candId = cand._id || cand.id;
+                            const name = cand.name || `${cand.firstName} ${cand.lastName}`;
+                            const serverOrigin = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/, '');
+                            const avatarUrl = cand.avatar 
+                              ? (cand.avatar.startsWith('http') ? cand.avatar : `${serverOrigin}${cand.avatar.startsWith('/') ? cand.avatar : `/${cand.avatar}`}`) 
+                              : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&h=100&q=80';
+                            const roleName = cand.title || 'Professional Seeker';
+                            const candLocation = cand.location || 'Sri Lanka';
+                            const firstSkill = cand.skills && cand.skills.length > 0 ? cand.skills[0] : 'Information Technology';
+                            const isSaved = savedCandidates.includes(candId);
+                            
+                            return (
+                              <div
+                                key={app._id || app.id}
+                                className="candidate-row-card"
+                                style={{ animationDelay: `${idx * 0.05}s` }}
+                              >
+                                <div className="candidate-row-card__avatar-container">
+                                  <Link to={`/candidates/${candId}`} className="candidate-row-card__avatar-link">
+                                    <img 
+                                      src={avatarUrl} 
+                                      alt={`${name} avatar`} 
+                                      className="candidate-row-card__avatar"
+                                      loading="lazy"
+                                    />
+                                  </Link>
+                                </div>
+
+                                <div className="candidate-row-card__content">
+                                  <h3 className="candidate-row-card__name">
+                                    <Link to={`/candidates/${candId}`}>{name}</Link>
+                                  </h3>
+                                  <div className="candidate-row-card__metadata">
+                                    <span className="candidate-row-card__role">{roleName}</span>
+                                    <span className="candidate-row-card__meta-item">
+                                      <MapPin size={13} className="candidate-row-card__meta-icon" />
+                                      {candLocation}
+                                    </span>
+                                    <span className="candidate-row-card__meta-divider">|</span>
+                                    <span className="candidate-row-card__meta-item">
+                                      <Filter size={13} className="candidate-row-card__meta-icon" />
+                                      {firstSkill}
+                                    </span>
+                                    {app.status && (
+                                      <>
+                                        <span className="candidate-row-card__meta-divider">|</span>
+                                        <span className={`status-badge status-badge--${app.status.toLowerCase()}`} style={{
+                                          padding: '2px 8px',
+                                          borderRadius: '4px',
+                                          fontSize: '0.75rem',
+                                          fontWeight: '600',
+                                          textTransform: 'capitalize',
+                                          background: app.status === 'accepted' ? '#e2fbe8' : app.status === 'rejected' ? '#ffebe9' : '#fff3e0',
+                                          color: app.status === 'accepted' ? '#0e7025' : app.status === 'rejected' ? '#c5221f' : '#b06000'
+                                        }}>
+                                          {app.status}
+                                        </span>
+                                      </>
+                                    )}
+                                  </div>
+                                  {app.coverLetter && (
+                                    <p style={{
+                                      fontSize: '0.85rem',
+                                      color: '#475569',
+                                      margin: '8px 0 0 0',
+                                      fontStyle: 'italic',
+                                      background: '#f8fafc',
+                                      padding: '8px 12px',
+                                      borderRadius: '6px',
+                                      borderLeft: '2px solid #cbd5e1'
+                                    }}>
+                                      <strong>Cover Letter:</strong> "{app.coverLetter.length > 120 ? `${app.coverLetter.substring(0, 120)}...` : app.coverLetter}"
+                                    </p>
+                                  )}
+                                </div>
+
+                                <div className="candidate-row-card__actions">
+                                  <button 
+                                    className={`btn candidate-row-card__save-btn ${isSaved ? 'candidate-row-card__save-btn--saved' : ''}`}
+                                    onClick={() => {
+                                      if (isSaved) {
+                                        setSavedCandidates(prev => prev.filter(id => id !== candId));
+                                      } else {
+                                        setSavedCandidates(prev => [...prev, candId]);
+                                      }
+                                    }}
+                                    type="button"
+                                  >
+                                    <ArrowLeftRight size={14} />
+                                    {isSaved ? 'Saved' : 'Save Candidate'}
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    candidatesList.map((cand, idx) => {
+                      const candId = cand._id || cand.id;
+                      const name = cand.name || `${cand.firstName} ${cand.lastName}`;
+                      const serverOrigin = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/, '');
+                      const avatarUrl = cand.avatar 
+                        ? (cand.avatar.startsWith('http') ? cand.avatar : `${serverOrigin}${cand.avatar.startsWith('/') ? cand.avatar : `/${cand.avatar}`}`) 
+                        : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&h=100&q=80';
+                      const roleName = cand.title || 'Professional Seeker';
+                      const candLocation = cand.location || 'Sri Lanka';
+                      const firstSkill = cand.skills && cand.skills.length > 0 ? cand.skills[0] : 'Information Technology';
+                      const isSaved = savedCandidates.includes(candId);
+                      
+                      return (
+                        <div
+                          key={candId}
+                          className="candidate-row-card"
+                          style={{ animationDelay: `${idx * 0.05}s` }}
+                        >
+                          <div className="candidate-row-card__avatar-container">
                             <img 
                               src={avatarUrl} 
                               alt={`${name} avatar`} 
                               className="candidate-row-card__avatar"
                               loading="lazy"
                             />
-                          )}
-                        </div>
+                          </div>
 
-                        <div className="candidate-row-card__content">
-                          <h3 className="candidate-row-card__name">
-                            {isLoggedIn && userRole === 'employer' ? (
-                              <Link to={`/candidates/${candId}`}>{name}</Link>
-                            ) : (
-                              name
-                            )}
-                          </h3>
-                          <div className="candidate-row-card__metadata">
-                            <span className="candidate-row-card__role">{roleName}</span>
-                            <span className="candidate-row-card__meta-item">
-                              <MapPin size={13} className="candidate-row-card__meta-icon" />
-                              {candLocation}
-                            </span>
-                            <span className="candidate-row-card__meta-divider">|</span>
-                            <span className="candidate-row-card__meta-item">
-                              <Filter size={13} className="candidate-row-card__meta-icon" />
-                              {firstSkill}
-                            </span>
+                          <div className="candidate-row-card__content">
+                            <h3 className="candidate-row-card__name">
+                              {name}
+                            </h3>
+                            <div className="candidate-row-card__metadata">
+                              <span className="candidate-row-card__role">{roleName}</span>
+                              <span className="candidate-row-card__meta-item">
+                                <MapPin size={13} className="candidate-row-card__meta-icon" />
+                                {candLocation}
+                              </span>
+                              <span className="candidate-row-card__meta-divider">|</span>
+                              <span className="candidate-row-card__meta-item">
+                                <Filter size={13} className="candidate-row-card__meta-icon" />
+                                {firstSkill}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="candidate-row-card__actions">
+                            <button 
+                              className={`btn candidate-row-card__save-btn ${isSaved ? 'candidate-row-card__save-btn--saved' : ''}`}
+                              onClick={() => {
+                                alert('Only registered employers can save candidates.');
+                              }}
+                              type="button"
+                            >
+                              <ArrowLeftRight size={14} />
+                              {isSaved ? 'Saved' : 'Save Candidate'}
+                            </button>
                           </div>
                         </div>
-
-                        <div className="candidate-row-card__actions">
-                          <button 
-                            className={`btn candidate-row-card__save-btn ${isSaved ? 'candidate-row-card__save-btn--saved' : ''}`}
-                            onClick={() => {
-                              if (!isLoggedIn || userRole !== 'employer') {
-                                alert('Only registered employers can save candidates.');
-                                return;
-                              }
-                              if (isSaved) {
-                                setSavedCandidates(prev => prev.filter(id => id !== candId));
-                              } else {
-                                setSavedCandidates(prev => [...prev, candId]);
-                              }
-                            }}
-                            type="button"
-                          >
-                            <ArrowLeftRight size={14} />
-                            {isSaved ? 'Saved' : 'Save Candidate'}
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })
+                      );
+                    })
+                  )
                 ) : (
                   <div className="candidates-results__empty">
                     <Search size={48} />
-                    <h3>No candidates found</h3>
-                    <p>Try adjusting your search query or filters.</p>
-                    <button className="btn btn-primary" onClick={clearAllFilters} id="empty-clear-filters">
-                      Clear All Filters
-                    </button>
+                    <h3>{isLoggedIn && userRole === 'employer' ? 'No applications received' : 'No candidates found'}</h3>
+                    <p>{isLoggedIn && userRole === 'employer' ? 'When candidates apply for your jobs, they will appear here.' : 'Try adjusting your search query or filters.'}</p>
+                    {!(isLoggedIn && userRole === 'employer') && (
+                      <button className="btn btn-primary" onClick={clearAllFilters} id="empty-clear-filters">
+                        Clear All Filters
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
