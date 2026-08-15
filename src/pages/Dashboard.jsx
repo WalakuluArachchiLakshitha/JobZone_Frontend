@@ -279,15 +279,7 @@ export default function Dashboard() {
     }
   }, [location]);
 
-  // Sync saved jobs list changes dynamically (e.g. from JobCard unfavorite clicks)
-  useEffect(() => {
-    const handleSavedJobsChanged = () => {
-      const saved = localStorage.getItem('jobzoneSavedJobs');
-      setSavedJobsList(saved ? JSON.parse(saved) : []);
-    };
-    window.addEventListener('jobzoneSavedJobsChanged', handleSavedJobsChanged);
-    return () => window.removeEventListener('jobzoneSavedJobsChanged', handleSavedJobsChanged);
-  }, []);
+  // NOTE: The saved jobs sync is handled by the API-based listener above (lines 174-191).
 
   const completenessScore = useMemo(() => {
     let score = 0;
@@ -1289,12 +1281,10 @@ export default function Dashboard() {
               
               {nextImprovement.score > 0 ? (
                 <div className="profile-score-info">
-                  <span className="score-percent">{nextImprovement.score}%</span>
                   <span className="score-text">{nextImprovement.text}</span>
                 </div>
               ) : (
                 <div className="profile-score-info">
-                  <span className="score-percent" style={{ color: '#10B981' }}>✓</span>
                   <span className="score-text" style={{ color: '#10B981' }}>Profile 100% complete!</span>
                 </div>
               )}
@@ -1744,7 +1734,7 @@ export default function Dashboard() {
                 ) : (
                   <div className="dashboard-saved-grid">
                     {savedJobsList.map((job) => (
-                      <JobCard key={job._id || job.id} job={job} variant="compact" />
+                      <JobCard key={job._id || job.id} job={job} initialSaved={true} variant="compact" />
                     ))}
                   </div>
                 )}

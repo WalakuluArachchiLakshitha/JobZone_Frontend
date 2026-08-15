@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { MapPin, Heart, Clock, Calendar, Folder, CheckCircle } from 'lucide-react';
+import { savedJobsApi } from '../api/savedJobsApi';
 import './JobCard.css';
 
-export default function JobCard({ job }) {
+export default function JobCard({ job, initialSaved }) {
   const navigate = useNavigate();
 
   // Mocking branch names based on locations or ID to match figma Branch values
@@ -11,43 +12,77 @@ export default function JobCard({ job }) {
 
   const getBaseId = (id) => String(id || '').split('-')[0];
 
-  // Retrieve current saved status dynamically
+  const jobId = job._id || job.id;
+
+  // If the parent passes initialSaved (e.g. from Dashboard saved list), trust it.
+  // Otherwise fall back to checking localStorage as a best-effort for guests.
   const [isSaved, setIsSaved] = useState(() => {
+    if (initialSaved !== undefined) return initialSaved;
     const savedRaw = localStorage.getItem('jobzoneSavedJobs');
     const savedList = savedRaw ? JSON.parse(savedRaw) : [];
-    return savedList.some(s => getBaseId(s.id || s._id) === getBaseId(job._id || job.id));
+    return savedList.some(s => getBaseId(s.id || s._id) === getBaseId(jobId));
   });
 
-  // Sync saved status from changes elsewhere
+  // Keep isSaved in sync when initialSaved prop changes from outside
   useEffect(() => {
+    if (initialSaved !== undefined) {
+      setIsSaved(initialSaved);
+    }
+  }, [initialSaved]);
+
+  // Sync saved status from changes elsewhere (only used when not controlled by parent)
+  useEffect(() => {
+    if (initialSaved !== undefined) return; // parent controls state — skip
     const handleSavedJobsChanged = () => {
       const savedRaw = localStorage.getItem('jobzoneSavedJobs');
       const savedList = savedRaw ? JSON.parse(savedRaw) : [];
-      setIsSaved(savedList.some(s => getBaseId(s.id || s._id) === getBaseId(job._id || job.id)));
+      setIsSaved(savedList.some(s => getBaseId(s.id || s._id) === getBaseId(jobId)));
     };
     window.addEventListener('jobzoneSavedJobsChanged', handleSavedJobsChanged);
     return () => window.removeEventListener('jobzoneSavedJobsChanged', handleSavedJobsChanged);
-  }, [job._id, job.id]);
+  }, [jobId, initialSaved]);
 
-  // Handle click on favorite (toggle action)
-  const handleFavoriteClick = (e) => {
+  // Handle click on favorite (toggle action) — calls backend API
+  const handleFavoriteClick = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
-    const savedRaw = localStorage.getItem('jobzoneSavedJobs');
-    const savedList = savedRaw ? JSON.parse(savedRaw) : [];
-    let updatedList = [...savedList];
-    
-    if (!isSaved) {
-      // Favorite: Save to localStorage and update
-      updatedList = [job, ...updatedList];
+
+    const token = localStorage.getItem('jobzone_token');
+
+    if (!token) {
+      // Not logged in — fall back to localStorage only
+      const savedRaw = localStorage.getItem('jobzoneSavedJobs');
+      const savedList = savedRaw ? JSON.parse(savedRaw) : [];
+      let updatedList = [...savedList];
+      if (!isSaved) {
+        updatedList = [job, ...updatedList];
+      } else {
+        updatedList = updatedList.filter(s => getBaseId(s.id || s._id) !== getBaseId(jobId));
+      }
       localStorage.setItem('jobzoneSavedJobs', JSON.stringify(updatedList));
+      setIsSaved(!isSaved);
       window.dispatchEvent(new Event('jobzoneSavedJobsChanged'));
-    } else {
-      // Unfavorite: Remove from localStorage and stay on current page
-      updatedList = updatedList.filter(s => getBaseId(s.id || s._id) !== getBaseId(job._id || job.id));
-      localStorage.setItem('jobzoneSavedJobs', JSON.stringify(updatedList));
+      return;
+    }
+
+    // Logged in — use backend API
+    try {
+      if (isSaved) {
+        await savedJobsApi.unsaveJob(jobId);
+        setIsSaved(false);
+      } else {
+        await savedJobsApi.saveJob(jobId);
+        setIsSaved(true);
+      }
+      // Notify Dashboard and other listeners to refresh the saved jobs list
       window.dispatchEvent(new Event('jobzoneSavedJobsChanged'));
+    } catch (err) {
+      // If 409 (already saved), just toggle the UI state
+      if (err?.status === 409) {
+        setIsSaved(true);
+      } else {
+        console.error('Failed to toggle saved job:', err);
+      }
     }
   };
 
@@ -55,11 +90,11 @@ export default function JobCard({ job }) {
     if (e.target.closest('a') || e.target.closest('button')) {
       return;
     }
-    navigate(`/jobs/${job._id || job.id}`);
+    navigate(`/jobs/${jobId}`);
   };
 
   return (
-    <div className="job-card" id={`job-card-${job._id || job.id}`} onClick={handleCardClick} style={{ cursor: 'pointer' }}>
+    <div className="job-card" id={`job-card-${jobId}`} onClick={handleCardClick} style={{ cursor: 'pointer' }}>
       <div className="job-card__logo-container">
         <div className="job-card__logo-box">
           <span className="job-card__logo-job">JOB</span>
@@ -69,7 +104,7 @@ export default function JobCard({ job }) {
 
       <div className="job-card__content">
         <h3 className="job-card__title">
-          <Link to={`/jobs/${job._id || job.id}`}>{job.title}</Link>
+          <Link to={`/jobs/${jobId}`}>{job.title}</Link>
         </h3>
         <div className="job-card__company-row">
           <span className="job-card__company">{job.company?.name || job.company || 'Company'}</span>
@@ -84,7 +119,7 @@ export default function JobCard({ job }) {
           <MapPin size={13} className="job-card__location-icon" />
           <span>{job.location}</span>
         </div>
-        
+
         {/* sub-details row */}
         <div className="job-card__details-row">
           <span className="job-card__detail-item">
@@ -109,8 +144,8 @@ export default function JobCard({ job }) {
           </span>
         )}
         <span className="job-card__type-badge">{job.type}</span>
-        <button 
-          className={`job-card__favorite-btn ${isSaved ? 'job-card__favorite-btn--active' : ''}`} 
+        <button
+          className={`job-card__favorite-btn ${isSaved ? 'job-card__favorite-btn--active' : ''}`}
           onClick={handleFavoriteClick}
           aria-label="Save Job"
         >
